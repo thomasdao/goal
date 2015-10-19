@@ -83,7 +83,7 @@ func (api *API) crudHandler(resource interface{}) http.HandlerFunc {
 			}
 		}
 
-		renderJson(rw, request, handler)
+		renderJSON(rw, request, handler)
 	}
 }
 

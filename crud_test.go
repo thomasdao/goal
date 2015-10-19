@@ -3,15 +3,16 @@ package goal_test
 import (
 	"bytes"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/thomasdao/goal"
-
+	"github.com/garyburd/redigo/redis"
 	"github.com/jinzhu/gorm"
+	"github.com/thomasdao/goal"
 )
 
 var server *httptest.Server
@@ -38,7 +39,23 @@ func (user *testuser) Delete(w http.ResponseWriter, request *http.Request) (int,
 	return goal.Delete(user, request)
 }
 
+func (user *testuser) AfterSave() error {
+	goal.RedisSet(user)
+	return nil
+}
+
+func (user *testuser) BeforeDelete() error {
+	fmt.Printf("Before Delete %s", user.ID)
+	goal.RedisUnset(user)
+	return nil
+}
+
 var db gorm.DB
+
+var (
+	redisAddress   = flag.String("redis-address", ":6379", "Address to the Redis server")
+	maxConnections = flag.Int("max-connections", 10, "Max connections to Redis")
+)
 
 func setup() {
 	var err error
@@ -47,7 +64,23 @@ func setup() {
 		panic(err)
 	}
 
+	// Setup database
 	goal.InitGormDb(&db)
+
+	// Setup redis
+	pool := redis.NewPool(func() (redis.Conn, error) {
+		c, err := redis.Dial("tcp", *redisAddress)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return c, err
+	}, *maxConnections)
+
+	goal.InitRedisPool(pool)
+
+	// Initialize API
 	api := goal.NewAPI()
 
 	// Initialize resource
@@ -68,6 +101,10 @@ func tearDown() {
 
 	if goal.DB() != nil {
 		db.Close()
+	}
+
+	if goal.Pool() != nil {
+		goal.Pool().Close()
 	}
 }
 

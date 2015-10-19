@@ -20,7 +20,7 @@ func (api *API) registerHandler(resource interface{}) http.HandlerFunc {
 			handler = resource.Register
 		}
 
-		renderJson(rw, request, handler)
+		renderJSON(rw, request, handler)
 	}
 }
 
@@ -32,7 +32,7 @@ func (api *API) loginHandler(resource interface{}) http.HandlerFunc {
 			handler = resource.Login
 		}
 
-		renderJson(rw, request, handler)
+		renderJSON(rw, request, handler)
 	}
 }
 

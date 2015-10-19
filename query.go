@@ -23,7 +23,7 @@ func (api *API) queryHandler(resource interface{}) http.HandlerFunc {
 			handler = resource.Query
 		}
 
-		renderJson(rw, request, handler)
+		renderJSON(rw, request, handler)
 	}
 }
 
