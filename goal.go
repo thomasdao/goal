@@ -28,16 +28,16 @@ func NewAPI() *API {
 }
 
 // To shorten the code, define a type
-type simpleResponse func(*http.Request) (int, interface{})
+type simpleResponse func(http.ResponseWriter, *http.Request) (int, interface{})
 
 // Write response back to client
-func writeResponse(rw http.ResponseWriter, request *http.Request, handler simpleResponse) {
+func renderJson(rw http.ResponseWriter, request *http.Request, handler simpleResponse) {
 	if handler == nil {
 		rw.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
 
-	code, data := handler(request)
+	code, data := handler(rw, request)
 
 	content, err := json.Marshal(data)
 	if err != nil {

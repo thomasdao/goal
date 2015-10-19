@@ -18,43 +18,43 @@ const (
 // GetSupporter is the interface that provides the Get
 // method a resource must support to receive HTTP GETs.
 type GetSupporter interface {
-	Get(*http.Request) (int, interface{})
+	Get(http.ResponseWriter, *http.Request) (int, interface{})
 }
 
 // PostSupporter is the interface that provides the Post
 // method a resource must support to receive HTTP POSTs.
 type PostSupporter interface {
-	Post(*http.Request) (int, interface{})
+	Post(http.ResponseWriter, *http.Request) (int, interface{})
 }
 
 // PutSupporter is the interface that provides the Put
 // method a resource must support to receive HTTP PUTs.
 type PutSupporter interface {
-	Put(*http.Request) (int, interface{})
+	Put(http.ResponseWriter, *http.Request) (int, interface{})
 }
 
 // DeleteSupporter is the interface that provides the Delete
 // method a resource must support to receive HTTP DELETEs.
 type DeleteSupporter interface {
-	Delete(*http.Request) (int, interface{})
+	Delete(http.ResponseWriter, *http.Request) (int, interface{})
 }
 
 // HeadSupporter is the interface that provides the Head
 // method a resource must support to receive HTTP HEADs.
 type HeadSupporter interface {
-	Head(*http.Request) (int, interface{})
+	Head(http.ResponseWriter, *http.Request) (int, interface{})
 }
 
 // PatchSupporter is the interface that provides the Patch
 // method a resource must support to receive HTTP PATCHs.
 type PatchSupporter interface {
-	Patch(*http.Request) (int, interface{})
+	Patch(http.ResponseWriter, *http.Request) (int, interface{})
 }
 
 // Route request to correct handler and write result back to client
 func (api *API) crudHandler(resource interface{}) http.HandlerFunc {
 	return func(rw http.ResponseWriter, request *http.Request) {
-		var handler func(*http.Request) (int, interface{})
+		var handler simpleResponse
 
 		switch request.Method {
 		case GET:
@@ -83,7 +83,7 @@ func (api *API) crudHandler(resource interface{}) http.HandlerFunc {
 			}
 		}
 
-		writeResponse(rw, request, handler)
+		renderJson(rw, request, handler)
 	}
 }
 

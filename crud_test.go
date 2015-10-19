@@ -22,19 +22,19 @@ type testuser struct {
 	Age  int
 }
 
-func (user *testuser) Get(request *http.Request) (int, interface{}) {
+func (user *testuser) Get(w http.ResponseWriter, request *http.Request) (int, interface{}) {
 	return goal.Read(user, request)
 }
 
-func (user *testuser) Post(request *http.Request) (int, interface{}) {
+func (user *testuser) Post(w http.ResponseWriter, request *http.Request) (int, interface{}) {
 	return goal.Create(user, request)
 }
 
-func (user *testuser) Put(request *http.Request) (int, interface{}) {
+func (user *testuser) Put(w http.ResponseWriter, request *http.Request) (int, interface{}) {
 	return goal.Update(user, request)
 }
 
-func (user *testuser) Delete(request *http.Request) (int, interface{}) {
+func (user *testuser) Delete(w http.ResponseWriter, request *http.Request) (int, interface{}) {
 	return goal.Delete(user, request)
 }
 

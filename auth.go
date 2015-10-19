@@ -4,12 +4,12 @@ import "net/http"
 
 // Registerer register a new user to system
 type Registerer interface {
-	Register(*http.Request) (int, interface{})
+	Register(http.ResponseWriter, *http.Request) (int, interface{})
 }
 
 // Loginer authenticates user into the system
 type Loginer interface {
-	Login(*http.Request) (int, interface{})
+	Login(http.ResponseWriter, *http.Request) (int, interface{})
 }
 
 func (api *API) registerHandler(resource interface{}) http.HandlerFunc {
@@ -20,7 +20,7 @@ func (api *API) registerHandler(resource interface{}) http.HandlerFunc {
 			handler = resource.Register
 		}
 
-		writeResponse(rw, request, handler)
+		renderJson(rw, request, handler)
 	}
 }
 
@@ -32,7 +32,7 @@ func (api *API) loginHandler(resource interface{}) http.HandlerFunc {
 			handler = resource.Login
 		}
 
-		writeResponse(rw, request, handler)
+		renderJson(rw, request, handler)
 	}
 }
 
