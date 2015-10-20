@@ -49,9 +49,8 @@ func Read(resource interface{}, request *http.Request) (int, interface{}) {
 	// Attempt to retrieve from redis first, if not exist, retrieve from
 	// database and cache it
 	if Pool() != nil {
-		name := simpleStructName(resource)
+		name := TableName(resource)
 		redisKey := DefaultRedisKey(name, id)
-		fmt.Println(redisKey)
 		err := RedisGet(redisKey, resource)
 		if err == nil && resource != nil {
 			return 200, resource
@@ -65,7 +64,8 @@ func Read(resource interface{}, request *http.Request) (int, interface{}) {
 
 	// Save to redis
 	if Pool() != nil {
-		RedisSet(resource)
+		key := RedisKey(resource)
+		RedisSet(key, resource)
 	}
 
 	return 200, resource
@@ -147,10 +147,13 @@ func Delete(resource interface{}, request *http.Request) (int, interface{}) {
 		return 400, nil
 	}
 
-	fmt.Println(id)
+	// Retrieve from database
+	if db.First(resource, id).Error != nil {
+		return 500, nil
+	}
 
 	// Delete record, if failed show 500 error code
-	if db.Delete(resource, id).Error != nil {
+	if db.Delete(resource).Error != nil {
 		return 500, nil
 	}
 

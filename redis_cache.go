@@ -1,26 +1,29 @@
-// Cache object to redis. It should be called from
-// AfterSave and AfterDelete callbacks
+// Cache object to redis automatically by registering
+// callback to gorm
 
 package goal
 
 import (
 	"encoding/json"
 	"fmt"
-	"reflect"
 
 	"github.com/garyburd/redigo/redis"
+	"github.com/jinzhu/gorm"
 )
-
-// Cacher let implementer define it own cache key
-type Cacher interface {
-	CacheKey() string
-}
 
 var pool *redis.Pool
 
 // InitRedisPool initialize connection pool to redis
 func InitRedisPool(p *redis.Pool) {
 	pool = p
+
+	// Register Gorm callbacks
+	if db != nil {
+		db.Callback().Create().After("gorm:after_create").Register("cacheToRedis", cacheToRedis)
+		db.Callback().Update().After("gorm:after_update").Register("cacheToRedis", cacheToRedis)
+		db.Callback().Query().After("gorm:after_query").Register("cacheToRedis", cacheToRedis)
+		db.Callback().Delete().Before("gorm:before_delete").Register("uncacheBeforeDelete", uncacheFromRedis)
+	}
 }
 
 // Pool return global connection pool to redis
@@ -28,31 +31,32 @@ func Pool() *redis.Pool {
 	return pool
 }
 
-// Get redis key as defined by the struct or fallback
-// to name:id format
-func redisKey(resource interface{}) string {
-	if resource == nil {
-		return ""
-	}
+func uncacheFromRedis(scope *gorm.Scope) {
+	// Reload object before delete
+	scope.DB().New().First(scope.Value)
 
-	var key string
+	// Delete from redis
+	key := redisKeyFromScope(scope)
+	RedisUnset(key)
+}
 
-	if cacher, ok := resource.(Cacher); ok {
-		key = cacher.CacheKey()
-	} else {
-		name := simpleStructName(resource)
-		val := reflect.ValueOf(resource).Elem()
-		id := val.FieldByName("ID").Interface()
-		key = DefaultRedisKey(name, id)
-	}
+func cacheToRedis(scope *gorm.Scope) {
+	key := redisKeyFromScope(scope)
+	RedisSet(key, scope.Value)
+}
 
-	fmt.Printf("Redis Key :%s", key)
-
+func redisKeyFromScope(scope *gorm.Scope) string {
+	name := scope.TableName()
+	id := scope.PrimaryKeyValue()
+	key := DefaultRedisKey(name, id)
 	return key
 }
 
+// RedisKey defines by the struct or fallback
+// to name:id format
 func RedisKey(resource interface{}) string {
-	return redisKey(resource)
+	scope := db.NewScope(resource)
+	return redisKeyFromScope(scope)
 }
 
 // DefaultRedisKey returns default format for redis key
@@ -61,7 +65,7 @@ func DefaultRedisKey(name string, id interface{}) string {
 }
 
 // RedisSet saves object to redis
-func RedisSet(resource interface{}) error {
+func RedisSet(key string, resource interface{}) error {
 	conn, err := pool.Dial()
 	if err != nil {
 		fmt.Println(err)
@@ -70,7 +74,6 @@ func RedisSet(resource interface{}) error {
 
 	defer conn.Close()
 
-	key := redisKey(resource)
 	var val []byte
 	val, err = json.Marshal(resource)
 	if err != nil {
@@ -82,7 +85,7 @@ func RedisSet(resource interface{}) error {
 }
 
 // RedisUnset delete object from redis
-func RedisUnset(resource interface{}) error {
+func RedisUnset(key string) error {
 	conn, err := pool.Dial()
 	if err != nil {
 		fmt.Println(err)
@@ -91,10 +94,24 @@ func RedisUnset(resource interface{}) error {
 
 	defer conn.Close()
 
-	key := redisKey(resource)
 	fmt.Printf("UNSET %s", key)
 	_, err = conn.Do("DEL", key)
 	return err
+}
+
+func RedisExists(key string) (bool, error) {
+	conn, err := pool.Dial()
+	if err != nil {
+		fmt.Println(err)
+		return false, err
+	}
+
+	defer conn.Close()
+	
+	var reply bool
+	reply, err = redis.Bool(conn.Do("EXISTS", key))
+	
+	return reply, err
 }
 
 // RedisGet returns object from database
@@ -121,4 +138,23 @@ func RedisGet(key string, resource interface{}) error {
 	json.Unmarshal(reply, resource)
 
 	return nil
+}
+
+// RedisClearAll clear all data from connection's CURRENT database
+func RedisClearAll() error {
+	conn, err := pool.Dial()
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	defer conn.Close()
+
+	_, err = conn.Do("FLUSHDB")
+
+	if err != nil {
+		fmt.Println("Error clear redis ", err)
+	}
+
+	return err
 }

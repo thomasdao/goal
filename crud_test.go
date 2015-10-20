@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 
 	"github.com/garyburd/redigo/redis"
@@ -39,17 +40,6 @@ func (user *testuser) Delete(w http.ResponseWriter, request *http.Request) (int,
 	return goal.Delete(user, request)
 }
 
-func (user *testuser) AfterSave() error {
-	goal.RedisSet(user)
-	return nil
-}
-
-func (user *testuser) BeforeDelete() error {
-	fmt.Printf("Before Delete %s", user.ID)
-	goal.RedisUnset(user)
-	return nil
-}
-
 var db gorm.DB
 
 var (
@@ -63,6 +53,8 @@ func setup() {
 	if err != nil {
 		panic(err)
 	}
+
+	db.SingularTable(true)
 
 	// Setup database
 	goal.InitGormDb(&db)
@@ -85,7 +77,7 @@ func setup() {
 
 	// Initialize resource
 	var user testuser
-	db.AutoMigrate(user)
+	db.AutoMigrate(&user)
 
 	// Add default path
 	api.AddDefaultCrudPaths(&user)
@@ -104,6 +96,7 @@ func tearDown() {
 	}
 
 	if goal.Pool() != nil {
+		goal.RedisClearAll()
 		goal.Pool().Close()
 	}
 }
@@ -133,7 +126,7 @@ func TestCreate(t *testing.T) {
 	}
 
 	if res.StatusCode != 200 {
-		t.Error("Request Failed")
+		t.Error("Request Failed ", res.StatusCode)
 		return
 	}
 
@@ -147,6 +140,16 @@ func TestCreate(t *testing.T) {
 
 	if user.Name != "Thomas" || user.Age != 28 {
 		t.Error("Save wrong data or missing data")
+	}
+
+	// Make sure data exists in Redis
+	if goal.Pool() != nil {
+		key := goal.RedisKey(user)
+		var redisUser testuser
+		goal.RedisGet(key, &redisUser)
+		if !reflect.DeepEqual(user, redisUser) {
+			t.Error("Incorrect data in redis, ", user, redisUser)
+		}
 	}
 }
 
@@ -193,6 +196,22 @@ func TestGet(t *testing.T) {
 	if result.ID != user.ID || result.Name != user.Name || result.Age != user.Age {
 		t.Error("Response is invalid")
 	}
+
+	// Make sure data exists in Redis
+	if goal.Pool() != nil {
+		key := goal.RedisKey(user)
+		
+		// Test data exists in Redis
+		if exist, _ := goal.RedisExists(key); !exist {
+			t.Error("Data should be saved into Redis")
+		}
+		
+		var redisUser testuser
+		goal.RedisGet(key, &redisUser)
+		if !reflect.DeepEqual(user, &redisUser) {
+			t.Error("Incorrect data in redis, ", user, &redisUser)
+		}
+	}
 }
 
 func TestPut(t *testing.T) {
@@ -229,6 +248,16 @@ func TestPut(t *testing.T) {
 	if result.ID != user.ID || result.Age != user.Age {
 		t.Error("Incorrect update")
 	}
+
+	// Make sure data exists in Redis
+	if goal.Pool() != nil {
+		key := goal.RedisKey(user)
+		var redisUser testuser
+		goal.RedisGet(key, &redisUser)
+		if !reflect.DeepEqual(result, redisUser) {
+			t.Error("Incorrect data in redis, ", result, redisUser)
+		}
+	}
 }
 
 func TestDelete(t *testing.T) {
@@ -239,6 +268,8 @@ func TestDelete(t *testing.T) {
 	user.Name = "Thomas"
 	user.Age = 28
 	db.Create(user)
+
+	fmt.Println("Object Id created", user.ID)
 
 	req, _ := http.NewRequest("DELETE", idURL(user.ID), nil)
 	req.Header.Set("Content-Type", "application/json")
@@ -259,6 +290,14 @@ func TestDelete(t *testing.T) {
 	var result testuser
 	if !db.Where("name = ?", "Thomas").First(&result).RecordNotFound() {
 		t.Error("Delete is not successful. Expected result delete from db")
+	}
+
+	// Make sure no more data in redis
+	if goal.Pool() != nil {
+		key := goal.RedisKey(user)
+		if exist, _ := goal.RedisExists(key); exist {
+			t.Error("Data should be deleted from Redis when object is deleted")
+		}
 	}
 
 }

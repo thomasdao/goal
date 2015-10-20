@@ -100,7 +100,7 @@ func (api *API) AddCrudResource(resource interface{}, paths ...string) {
 // The default path is based on the struct name
 func (api *API) AddDefaultCrudPaths(resource interface{}) {
 	// Extract name of resource type
-	name := simpleStructName(resource)
+	name := TableName(resource)
 
 	// Default path to interact with resource
 	createPath := fmt.Sprintf("/%s", name)
