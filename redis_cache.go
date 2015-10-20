@@ -19,10 +19,10 @@ func InitRedisPool(p *redis.Pool) {
 
 	// Register Gorm callbacks
 	if db != nil {
-		db.Callback().Create().After("gorm:after_create").Register("cacheToRedis", cacheToRedis)
-		db.Callback().Update().After("gorm:after_update").Register("cacheToRedis", cacheToRedis)
-		db.Callback().Query().After("gorm:after_query").Register("cacheToRedis", cacheToRedis)
-		db.Callback().Delete().Before("gorm:before_delete").Register("uncacheBeforeDelete", uncacheFromRedis)
+		db.Callback().Create().After("gorm:after_create").Register("goal:cache_after_create", cacheToRedis)
+		db.Callback().Update().After("gorm:after_update").Register("goal:cache_after_update", cacheToRedis)
+		db.Callback().Query().After("gorm:after_query").Register("goal:cache_after_query", cacheToRedis)
+		db.Callback().Delete().Before("gorm:before_delete").Register("goal:uncache_after_delete", uncacheFromRedis)
 	}
 }
 
