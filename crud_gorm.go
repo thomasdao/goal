@@ -147,13 +147,8 @@ func Delete(resource interface{}, request *http.Request) (int, interface{}) {
 		return 400, nil
 	}
 
-	// Retrieve from database
-	if db.First(resource, id).Error != nil {
-		return 500, nil
-	}
-
 	// Delete record, if failed show 500 error code
-	if db.Delete(resource).Error != nil {
+	if db.Delete(resource, id).Error != nil {
 		return 500, nil
 	}
 
