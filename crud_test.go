@@ -105,7 +105,7 @@ func userURL() string {
 	return fmt.Sprint(server.URL, "/testuser")
 }
 
-func idURL(id uint) string {
+func idURL(id interface{}) string {
 	return fmt.Sprint(server.URL, "/testuser/", id)
 }
 
