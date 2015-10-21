@@ -104,7 +104,7 @@ func (api *API) AddDefaultCrudPaths(resource interface{}) {
 
 	// Default path to interact with resource
 	createPath := fmt.Sprintf("/%s", name)
-	detailPath := fmt.Sprintf("/%s/{id:[0-9]+}", name)
+	detailPath := fmt.Sprintf("/%s/{id:[a-zA-Z0-9]+}", name)
 
 	api.AddCrudResource(resource, createPath, detailPath)
 }

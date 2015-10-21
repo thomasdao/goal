@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
@@ -40,11 +39,8 @@ func Read(resource interface{}, request *http.Request) (int, interface{}) {
 	// Get assumes url requests always has "id" parameters
 	vars := mux.Vars(request)
 
-	// Retrieve id parameter, if error return 400 HTTP error code
-	id, err := strconv.ParseInt(vars["id"], 10, 64)
-	if err != nil {
-		return 400, nil
-	}
+	// Retrieve id parameter
+	id := vars["id"]
 
 	// Attempt to retrieve from redis first, if not exist, retrieve from
 	// database and cache it
@@ -105,10 +101,7 @@ func Update(resource interface{}, request *http.Request) (int, interface{}) {
 	vars := mux.Vars(request)
 
 	// Retrieve id parameter, if error return 400 HTTP error code
-	id, err := strconv.ParseInt(vars["id"], 10, 64)
-	if err != nil {
-		return 400, nil
-	}
+	id := vars["id"]
 
 	// Retrieve from database
 	if db.First(resource, id).Error != nil {
@@ -117,7 +110,7 @@ func Update(resource interface{}, request *http.Request) (int, interface{}) {
 
 	// Parse request body into resource
 	decoder := json.NewDecoder(request.Body)
-	err = decoder.Decode(resource)
+	err := decoder.Decode(resource)
 	if err != nil {
 		fmt.Println(err)
 		return 500, nil
@@ -142,10 +135,7 @@ func Delete(resource interface{}, request *http.Request) (int, interface{}) {
 	vars := mux.Vars(request)
 
 	// Retrieve id parameter, if error return 400 HTTP error code
-	id, err := strconv.ParseInt(vars["id"], 10, 64)
-	if err != nil {
-		return 400, nil
-	}
+	id := vars["id"]
 
 	// Delete record, if failed show 500 error code
 	if db.Delete(resource, id).Error != nil {

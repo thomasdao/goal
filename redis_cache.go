@@ -61,7 +61,7 @@ func RedisKey(resource interface{}) string {
 
 // DefaultRedisKey returns default format for redis key
 func DefaultRedisKey(name string, id interface{}) string {
-	return fmt.Sprintf("%s:%d", name, id)
+	return fmt.Sprintf("%v:%v", name, id)
 }
 
 // RedisSet saves object to redis
