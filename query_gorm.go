@@ -72,9 +72,10 @@ func (item *QueryItem) getQuery(scope *gorm.Scope) (string, error) {
 // QueryParams defines structure of a query. Where clause
 // may include multiple QueryItem and connect by "AND" operator
 type QueryParams struct {
-	Where []QueryItem     `json:"where"`
-	Limit int64           `json:"limit"`
-	Order map[string]bool `json:"order"`
+	Where   []QueryItem     `json:"where"`
+	Limit   int64           `json:"limit"`
+	Order   map[string]bool `json:"order"`
+	Include []string        `json:"include"`
 }
 
 // Find constructs the query, return error immediately if query is invalid,
@@ -126,6 +127,12 @@ func (params *QueryParams) Find(resource interface{}, results interface{}) error
 		}
 	}
 
+	if params.Include != nil {
+		for _, name := range params.Include {
+			qryDB = qryDB.Preload(name)
+		}
+	}
+
 	// Query the database
 	qryDB.Find(results)
 
@@ -133,7 +140,8 @@ func (params *QueryParams) Find(resource interface{}, results interface{}) error
 }
 
 // HandleQuery retrieves results filtered by request parameters
-func HandleQuery(resource interface{}, request *http.Request, results interface{}) (int, interface{}) {
+func HandleQuery(resource interface{}, request *http.Request,
+	results interface{}, roler Roler) (int, interface{}) {
 	if db == nil {
 		panic("Database is not initialized yet")
 	}

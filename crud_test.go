@@ -14,19 +14,19 @@ import (
 
 // Define HTTP methods to support
 func (user *testuser) Get(w http.ResponseWriter, request *http.Request) (int, interface{}) {
-	return goal.Read(user, request)
+	return goal.Read(user, request, nil)
 }
 
 func (user *testuser) Post(w http.ResponseWriter, request *http.Request) (int, interface{}) {
-	return goal.Create(user, request)
+	return goal.Create(user, request, nil)
 }
 
 func (user *testuser) Put(w http.ResponseWriter, request *http.Request) (int, interface{}) {
-	return goal.Update(user, request)
+	return goal.Update(user, request, nil)
 }
 
 func (user *testuser) Delete(w http.ResponseWriter, request *http.Request) (int, interface{}) {
-	return goal.Delete(user, request)
+	return goal.Delete(user, request, nil)
 }
 
 func TestCreate(t *testing.T) {

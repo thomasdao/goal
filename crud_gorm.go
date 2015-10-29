@@ -31,7 +31,7 @@ func DB() *gorm.DB {
 
 // Read provides basic implementation to retrieve object
 // based on request parameters
-func Read(resource interface{}, request *http.Request) (int, interface{}) {
+func Read(resource interface{}, request *http.Request, roler Roler) (int, interface{}) {
 	if db == nil {
 		panic("Database is not initialized yet")
 	}
@@ -69,7 +69,7 @@ func Read(resource interface{}, request *http.Request) (int, interface{}) {
 
 // Create provides basic implementation to create a record
 // into the database
-func Create(resource interface{}, request *http.Request) (int, interface{}) {
+func Create(resource interface{}, request *http.Request, roler Roler) (int, interface{}) {
 	if db == nil {
 		panic("Database is not initialized yet")
 	}
@@ -92,7 +92,7 @@ func Create(resource interface{}, request *http.Request) (int, interface{}) {
 
 // Update provides basic implementation to update a record
 // inside database
-func Update(resource interface{}, request *http.Request) (int, interface{}) {
+func Update(resource interface{}, request *http.Request, roler Roler) (int, interface{}) {
 	if db == nil {
 		panic("Database is not initialized yet")
 	}
@@ -126,7 +126,7 @@ func Update(resource interface{}, request *http.Request) (int, interface{}) {
 
 // Delete provides basic implementation to delete a record inside
 // a database
-func Delete(resource interface{}, request *http.Request) (int, interface{}) {
+func Delete(resource interface{}, request *http.Request, roler Roler) (int, interface{}) {
 	if db == nil {
 		panic("Database is not initialized yet")
 	}

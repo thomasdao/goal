@@ -8,6 +8,7 @@ import (
 // To shorten the code, define a type
 type simpleResponse func(http.ResponseWriter, *http.Request) (int, interface{})
 
+// TableName returns table name for the resource
 func TableName(resource interface{}) string {
 	// Extract name of resource type
 	name := db.NewScope(resource).TableName()
