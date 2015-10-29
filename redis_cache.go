@@ -17,6 +17,14 @@ var pool *redis.Pool
 func InitRedisPool(p *redis.Pool) {
 	pool = p
 
+	conn, err := pool.Dial()
+	if err != nil {
+		pool = nil
+		return
+	}
+
+	defer conn.Close()
+
 	// Register Gorm callbacks
 	if db != nil {
 		db.Callback().Create().After("gorm:after_create").Register("goal:cache_after_create", cacheToRedis)
@@ -99,6 +107,7 @@ func RedisUnset(key string) error {
 	return err
 }
 
+// RedisExists check if a key exists
 func RedisExists(key string) (bool, error) {
 	conn, err := pool.Dial()
 	if err != nil {
@@ -107,10 +116,10 @@ func RedisExists(key string) (bool, error) {
 	}
 
 	defer conn.Close()
-	
+
 	var reply bool
 	reply, err = redis.Bool(conn.Do("EXISTS", key))
-	
+
 	return reply, err
 }
 
