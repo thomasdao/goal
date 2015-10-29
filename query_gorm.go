@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
@@ -48,11 +49,12 @@ type QueryItem struct {
 func (item *QueryItem) getQuery(scope *gorm.Scope) (string, error) {
 	_, exists := allowedOps()[item.Op]
 	if !exists {
-		return "", errors.New("Invalid SQL operator")
+		str := fmt.Sprintf("Invalid SQL operator: %s", item.Op)
+		return "", errors.New(str)
 	}
 
 	if !scope.HasColumn(item.Key) {
-		str := fmt.Sprintf("Column %s does not exist", item.Key)
+		str := fmt.Sprintf("Column does not exist: %s", item.Key)
 		return "", errors.New(str)
 	}
 
@@ -125,13 +127,13 @@ func (params *QueryParams) Find(resource interface{}, results interface{}) error
 	}
 
 	// Query the database
-	qryDB.Find(&results)
+	qryDB.Find(results)
 
 	return nil
 }
 
-// Query retrieves parameters from request and construct a proper SQL query
-func Query(resource interface{}, request *http.Request) (int, interface{}) {
+// HandleQuery retrieves results filtered by request parameters
+func HandleQuery(resource interface{}, request *http.Request, results interface{}) (int, interface{}) {
 	if db == nil {
 		panic("Database is not initialized yet")
 	}
@@ -139,12 +141,19 @@ func Query(resource interface{}, request *http.Request) (int, interface{}) {
 	vars := mux.Vars(request)
 
 	// Retrieve query parameter
-	query := vars["query"]
+	query, err := url.QueryUnescape(vars["query"])
+
+	if err != nil {
+		return 500, nil
+	}
 
 	var params QueryParams
-	json.Unmarshal([]byte(query), &params)
+	err = json.Unmarshal([]byte(query), &params)
+	if err != nil {
+		fmt.Println(err)
+		return 500, nil
+	}
 
-	var results interface{}
 	params.Find(resource, results)
 
 	return 200, results

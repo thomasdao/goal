@@ -37,6 +37,6 @@ func (api *API) AddQueryPath(resource interface{}, path string) {
 // data, return filtered results back to client. The path is created
 // base on struct name
 func (api *API) AddDefaultQueryPath(resource interface{}) {
-	queryPath := fmt.Sprintf("/query/%s", TableName(resource))
+	queryPath := fmt.Sprintf("/query/%s/{query}", TableName(resource))
 	api.AddQueryPath(resource, queryPath)
 }
