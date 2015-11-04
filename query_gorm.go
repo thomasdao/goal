@@ -142,7 +142,7 @@ func (params *QueryParams) Find(resource interface{}, results interface{}) error
 
 // HandleQuery retrieves results filtered by request parameters
 func HandleQuery(resource interface{}, request *http.Request,
-	results interface{}, roler Roler) (int, interface{}, error) {
+	results interface{}) (int, interface{}, error) {
 	if db == nil {
 		panic("Database is not initialized yet")
 	}
@@ -177,7 +177,7 @@ func HandleQuery(resource interface{}, request *http.Request,
 
 		for i := 0; i < s.Len(); i++ {
 			item := s.Index(i).Interface()
-			err = CanPerform(item, roler, true)
+			err = CanPerform(item, request, true)
 
 			// Only add to the filtered slice if no permission error
 			if err == nil {

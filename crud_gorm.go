@@ -31,7 +31,7 @@ func DB() *gorm.DB {
 
 // Read provides basic implementation to retrieve object
 // based on request parameters
-func Read(resource interface{}, request *http.Request, roler Roler) (int, interface{}, error) {
+func Read(resource interface{}, request *http.Request) (int, interface{}, error) {
 	if db == nil {
 		panic("Database is not initialized yet")
 	}
@@ -51,7 +51,7 @@ func Read(resource interface{}, request *http.Request, roler Roler) (int, interf
 		err = RedisGet(redisKey, resource)
 		if err == nil && resource != nil {
 			// Check if resource is authorized
-			err = CanPerform(resource, roler, true)
+			err = CanPerform(resource, request, true)
 			if err != nil {
 				return 403, nil, err
 			}
@@ -73,7 +73,7 @@ func Read(resource interface{}, request *http.Request, roler Roler) (int, interf
 	}
 
 	// Check if resource is authorized
-	err = CanPerform(resource, roler, true)
+	err = CanPerform(resource, request, true)
 	if err != nil {
 		return 403, nil, err
 	}
@@ -83,7 +83,7 @@ func Read(resource interface{}, request *http.Request, roler Roler) (int, interf
 
 // Create provides basic implementation to create a record
 // into the database
-func Create(resource interface{}, request *http.Request, roler Roler) (int, interface{}, error) {
+func Create(resource interface{}, request *http.Request) (int, interface{}, error) {
 	if db == nil {
 		panic("Database is not initialized yet")
 	}
@@ -107,7 +107,7 @@ func Create(resource interface{}, request *http.Request, roler Roler) (int, inte
 
 // Update provides basic implementation to update a record
 // inside database
-func Update(resource interface{}, request *http.Request, roler Roler) (int, interface{}, error) {
+func Update(resource interface{}, request *http.Request) (int, interface{}, error) {
 	if db == nil {
 		panic("Database is not initialized yet")
 	}
@@ -125,7 +125,7 @@ func Update(resource interface{}, request *http.Request, roler Roler) (int, inte
 	}
 
 	// Check permission
-	err = CanPerform(resource, roler, false)
+	err = CanPerform(resource, request, false)
 	if err != nil {
 		return 403, nil, err
 	}
@@ -149,7 +149,7 @@ func Update(resource interface{}, request *http.Request, roler Roler) (int, inte
 
 // Delete provides basic implementation to delete a record inside
 // a database
-func Delete(resource interface{}, request *http.Request, roler Roler) (int, interface{}, error) {
+func Delete(resource interface{}, request *http.Request) (int, interface{}, error) {
 	if db == nil {
 		panic("Database is not initialized yet")
 	}
@@ -167,7 +167,7 @@ func Delete(resource interface{}, request *http.Request, roler Roler) (int, inte
 	}
 
 	// Check permission
-	err = CanPerform(resource, roler, false)
+	err = CanPerform(resource, request, false)
 	if err != nil {
 		return 403, nil, err
 	}
