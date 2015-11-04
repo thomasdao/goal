@@ -11,7 +11,7 @@ import (
 	"github.com/thomasdao/goal"
 )
 
-func (user *testuser) Query(w http.ResponseWriter, req *http.Request) (int, interface{}) {
+func (user *testuser) Query(w http.ResponseWriter, req *http.Request) (int, interface{}, error) {
 	var results []testuser
 	return goal.HandleQuery(user, req, &results, nil)
 }

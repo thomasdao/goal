@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"reflect"
 
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
@@ -141,7 +142,7 @@ func (params *QueryParams) Find(resource interface{}, results interface{}) error
 
 // HandleQuery retrieves results filtered by request parameters
 func HandleQuery(resource interface{}, request *http.Request,
-	results interface{}, roler Roler) (int, interface{}) {
+	results interface{}, roler Roler) (int, interface{}, error) {
 	if db == nil {
 		panic("Database is not initialized yet")
 	}
@@ -152,17 +153,40 @@ func HandleQuery(resource interface{}, request *http.Request,
 	query, err := url.QueryUnescape(vars["query"])
 
 	if err != nil {
-		return 500, nil
+		return 500, nil, err
 	}
 
 	var params QueryParams
 	err = json.Unmarshal([]byte(query), &params)
 	if err != nil {
 		fmt.Println(err)
-		return 500, nil
+		return 500, nil, err
 	}
 
-	params.Find(resource, results)
+	err = params.Find(resource, results)
+	if err != nil {
+		return 500, nil, err
+	}
 
-	return 200, results
+	// Check permission for each item, remove item which doesn't have permission
+	var filtered []interface{}
+
+	switch reflect.TypeOf(results).Elem().Kind() {
+	case reflect.Slice:
+		s := reflect.ValueOf(results).Elem()
+
+		for i := 0; i < s.Len(); i++ {
+			item := s.Index(i).Interface()
+			err = CanPerform(item, roler, true)
+
+			// Only add to the filtered slice if no permission error
+			if err == nil {
+				filtered = append(filtered, item)
+			}
+		}
+	default:
+		panic("results should be a slice")
+	}
+
+	return 200, filtered, nil
 }

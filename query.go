@@ -12,7 +12,7 @@ import (
 // QuerySupporter is the interface that return filtered results
 // based on request paramters
 type QuerySupporter interface {
-	Query(http.ResponseWriter, *http.Request) (int, interface{})
+	Query(http.ResponseWriter, *http.Request) (int, interface{}, error)
 }
 
 func (api *API) queryHandler(resource interface{}) http.HandlerFunc {

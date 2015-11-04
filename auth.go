@@ -4,12 +4,12 @@ import "net/http"
 
 // Registerer register a new user to system
 type Registerer interface {
-	Register(http.ResponseWriter, *http.Request) (int, interface{})
+	Register(http.ResponseWriter, *http.Request) (int, interface{}, error)
 }
 
 // Loginer authenticates user into the system
 type Loginer interface {
-	Login(http.ResponseWriter, *http.Request) (int, interface{})
+	Login(http.ResponseWriter, *http.Request) (int, interface{}, error)
 }
 
 func (api *API) registerHandler(resource interface{}) http.HandlerFunc {

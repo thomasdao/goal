@@ -31,7 +31,7 @@ func DB() *gorm.DB {
 
 // Read provides basic implementation to retrieve object
 // based on request parameters
-func Read(resource interface{}, request *http.Request, roler Roler) (int, interface{}) {
+func Read(resource interface{}, request *http.Request, roler Roler) (int, interface{}, error) {
 	if db == nil {
 		panic("Database is not initialized yet")
 	}
@@ -44,18 +44,26 @@ func Read(resource interface{}, request *http.Request, roler Roler) (int, interf
 
 	// Attempt to retrieve from redis first, if not exist, retrieve from
 	// database and cache it
+	var err error
 	if Pool() != nil {
 		name := TableName(resource)
 		redisKey := DefaultRedisKey(name, id)
-		err := RedisGet(redisKey, resource)
+		err = RedisGet(redisKey, resource)
 		if err == nil && resource != nil {
-			return 200, resource
+			// Check if resource is authorized
+			err = CanPerform(resource, roler, true)
+			if err != nil {
+				return 403, nil, err
+			}
+
+			return 200, resource, nil
 		}
 	}
 
 	// Retrieve from database
-	if db.First(resource, id).Error != nil {
-		return 500, nil
+	err = db.First(resource, id).Error
+	if err != nil {
+		return 500, nil, err
 	}
 
 	// Save to redis
@@ -64,12 +72,18 @@ func Read(resource interface{}, request *http.Request, roler Roler) (int, interf
 		RedisSet(key, resource)
 	}
 
-	return 200, resource
+	// Check if resource is authorized
+	err = CanPerform(resource, roler, true)
+	if err != nil {
+		return 403, nil, err
+	}
+
+	return 200, resource, nil
 }
 
 // Create provides basic implementation to create a record
 // into the database
-func Create(resource interface{}, request *http.Request, roler Roler) (int, interface{}) {
+func Create(resource interface{}, request *http.Request, roler Roler) (int, interface{}, error) {
 	if db == nil {
 		panic("Database is not initialized yet")
 	}
@@ -79,20 +93,21 @@ func Create(resource interface{}, request *http.Request, roler Roler) (int, inte
 	err := decoder.Decode(resource)
 	if err != nil {
 		fmt.Println(err)
-		return 500, nil
+		return 500, nil, err
 	}
 
 	// Save to database
-	if db.Create(resource).Error != nil {
-		return 500, nil
+	err = db.Create(resource).Error
+	if err != nil {
+		return 500, nil, err
 	}
 
-	return 200, resource
+	return 200, resource, nil
 }
 
 // Update provides basic implementation to update a record
 // inside database
-func Update(resource interface{}, request *http.Request, roler Roler) (int, interface{}) {
+func Update(resource interface{}, request *http.Request, roler Roler) (int, interface{}, error) {
 	if db == nil {
 		panic("Database is not initialized yet")
 	}
@@ -104,29 +119,37 @@ func Update(resource interface{}, request *http.Request, roler Roler) (int, inte
 	id := vars["id"]
 
 	// Retrieve from database
-	if db.First(resource, id).Error != nil {
-		return 500, nil
+	err := db.First(resource, id).Error
+	if err != nil {
+		return 500, nil, err
+	}
+
+	// Check permission
+	err = CanPerform(resource, roler, false)
+	if err != nil {
+		return 403, nil, err
 	}
 
 	// Parse request body into resource
 	decoder := json.NewDecoder(request.Body)
-	err := decoder.Decode(resource)
+	err = decoder.Decode(resource)
 	if err != nil {
 		fmt.Println(err)
-		return 500, nil
+		return 500, nil, err
 	}
 
 	// Save to database
-	if db.Save(resource).Error != nil {
-		return 500, nil
+	err = db.Save(resource).Error
+	if err != nil {
+		return 500, nil, err
 	}
 
-	return 200, resource
+	return 200, resource, err
 }
 
 // Delete provides basic implementation to delete a record inside
 // a database
-func Delete(resource interface{}, request *http.Request, roler Roler) (int, interface{}) {
+func Delete(resource interface{}, request *http.Request, roler Roler) (int, interface{}, error) {
 	if db == nil {
 		panic("Database is not initialized yet")
 	}
@@ -137,10 +160,23 @@ func Delete(resource interface{}, request *http.Request, roler Roler) (int, inte
 	// Retrieve id parameter, if error return 400 HTTP error code
 	id := vars["id"]
 
-	// Delete record, if failed show 500 error code
-	if db.Delete(resource, id).Error != nil {
-		return 500, nil
+	// Retrieve from database
+	err := db.First(resource, id).Error
+	if err != nil {
+		return 500, nil, err
 	}
 
-	return 200, nil
+	// Check permission
+	err = CanPerform(resource, roler, false)
+	if err != nil {
+		return 403, nil, err
+	}
+
+	// Delete record, if failed show 500 error code
+	err = db.Delete(resource, id).Error
+	if err != nil {
+		return 500, nil, err
+	}
+
+	return 200, nil, nil
 }

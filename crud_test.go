@@ -13,19 +13,19 @@ import (
 )
 
 // Define HTTP methods to support
-func (user *testuser) Get(w http.ResponseWriter, request *http.Request) (int, interface{}) {
+func (user *testuser) Get(w http.ResponseWriter, request *http.Request) (int, interface{}, error) {
 	return goal.Read(user, request, nil)
 }
 
-func (user *testuser) Post(w http.ResponseWriter, request *http.Request) (int, interface{}) {
+func (user *testuser) Post(w http.ResponseWriter, request *http.Request) (int, interface{}, error) {
 	return goal.Create(user, request, nil)
 }
 
-func (user *testuser) Put(w http.ResponseWriter, request *http.Request) (int, interface{}) {
+func (user *testuser) Put(w http.ResponseWriter, request *http.Request) (int, interface{}, error) {
 	return goal.Update(user, request, nil)
 }
 
-func (user *testuser) Delete(w http.ResponseWriter, request *http.Request) (int, interface{}) {
+func (user *testuser) Delete(w http.ResponseWriter, request *http.Request) (int, interface{}, error) {
 	return goal.Delete(user, request, nil)
 }
 

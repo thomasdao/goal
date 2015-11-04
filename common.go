@@ -6,7 +6,7 @@ import (
 )
 
 // To shorten the code, define a type
-type simpleResponse func(http.ResponseWriter, *http.Request) (int, interface{})
+type simpleResponse func(http.ResponseWriter, *http.Request) (int, interface{}, error)
 
 // TableName returns table name for the resource
 func TableName(resource interface{}) string {
@@ -22,11 +22,17 @@ func renderJSON(rw http.ResponseWriter, request *http.Request, handler simpleRes
 		return
 	}
 
-	code, data := handler(rw, request)
+	code, data, err := handler(rw, request)
+	if code == 403 {
+		rw.WriteHeader(http.StatusUnauthorized)
+		return
+	}
 
-	content, err := json.Marshal(data)
+	var content []byte
+	content, err = json.Marshal(data)
 	if err != nil {
 		rw.WriteHeader(http.StatusInternalServerError)
+		rw.Write([]byte(err.Error()))
 		return
 	}
 
