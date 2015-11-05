@@ -50,14 +50,14 @@ func SetUserSession(w http.ResponseWriter, req *http.Request) error {
 	}
 
 	var user interface{}
-	user, err = getUserResource()
+	user, err = getUserResource() // similar to var user User
 	if err != nil {
 		return err
 	}
 
 	// Marshal user to json and save to session
 	var data []byte
-	data, err = json.Marshal(user)
+	data, err = json.Marshal(&user)
 	if err != nil {
 		return err
 	}

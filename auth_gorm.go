@@ -133,3 +133,8 @@ func LoginWithPassword(
 
 	return nil
 }
+
+// HandleLogout let user logout from the system
+func HandleLogout(w http.ResponseWriter, request *http.Request) {
+	ClearUserSession(w, request)
+}
