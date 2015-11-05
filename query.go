@@ -5,10 +5,6 @@ import (
 	"net/http"
 )
 
-// *********************************************************************//
-// For Query
-// *********************************************************************//
-
 // QuerySupporter is the interface that return filtered results
 // based on request paramters
 type QuerySupporter interface {
