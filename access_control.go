@@ -22,19 +22,6 @@ type Permitter interface {
 	Permit() *Permission
 }
 
-// RequestRoler defines an object to return current role of a request
-type RequestRoler interface {
-	CurrentRole(*http.Request) Roler
-}
-
-// SharedRequestRoler defines single instance of role manager
-var SharedRequestRoler RequestRoler
-
-// SetSharedRequestRoler initializes the share manager
-func SetSharedRequestRoler(manager RequestRoler) {
-	SharedRequestRoler = manager
-}
-
 // CanPerform check if a roler can access a resource (read/write)
 // If read is false, then it will check for write permission
 // It will return error if the check is failed
@@ -53,11 +40,15 @@ func CanPerform(resource interface{}, request *http.Request, read bool) error {
 		return nil
 	}
 
+	// Retrieve role from current user
+	user, err := GetCurrentUser(request)
+	if err != nil {
+		return err
+	}
+
 	var roler Roler
-	if SharedRequestRoler != nil {
-		roler = SharedRequestRoler.CurrentRole(request)
-	} else {
-		roler = nil
+	if user != nil {
+		roler, _ = user.(Roler)
 	}
 
 	var roles []string
