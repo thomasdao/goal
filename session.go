@@ -1,7 +1,6 @@
 package goal
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 	"reflect"
@@ -43,27 +42,16 @@ func getUserResource() (interface{}, error) {
 }
 
 // SetUserSession sets current user to session
-func SetUserSession(w http.ResponseWriter, req *http.Request) error {
+func SetUserSession(w http.ResponseWriter, req *http.Request, user interface{}) error {
 	session, err := SharedSessionStore.Get(req, SessionName)
 	if err != nil {
 		return err
 	}
 
-	var user interface{}
-	user, err = getUserResource() // similar to var user User
-	if err != nil {
-		return err
-	}
-
-	// Marshal user to json and save to session
-	var data []byte
-	data, err = json.Marshal(&user)
-	if err != nil {
-		return err
-	}
+	scope := db.NewScope(user)
 
 	// Set some session values.
-	session.Values[SessionKey] = data
+	session.Values[SessionKey] = scope.PrimaryKeyValue()
 
 	// Save it before we write to the response/return from the handler.
 	err = session.Save(req, w)
@@ -77,7 +65,10 @@ func GetCurrentUser(req *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	data := session.Values[SessionKey]
+	userID, ok := session.Values[SessionKey]
+	if !ok {
+		return nil, errors.New("empty session")
+	}
 
 	var user interface{}
 	user, err = getUserResource()
@@ -85,8 +76,23 @@ func GetCurrentUser(req *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	if data, ok := data.([]byte); ok {
-		err = json.Unmarshal(data, &user)
+	// Load user from Cache or from database
+	exists := false
+	if Pool() != nil {
+		cacheKey := DefaultRedisKey(TableName(&user), userID)
+		exists, err = RedisExists(cacheKey)
+		if err == nil && exists {
+			err = RedisGet(cacheKey, &user)
+
+			if err == nil {
+				return &user, nil
+			}
+		}
+	}
+
+	// If data not exists in Redis, load from database
+	if !exists {
+		err = db.First(&user, userID).Error
 		return &user, err
 	}
 

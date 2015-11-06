@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 
 	"github.com/garyburd/redigo/redis"
+	"github.com/gorilla/sessions"
 	"github.com/jinzhu/gorm"
 	"github.com/thomasdao/goal"
 )
@@ -13,9 +14,11 @@ import (
 var server *httptest.Server
 
 type testuser struct {
-	ID   uint `gorm:"primary_key"`
-	Name string
-	Age  int
+	ID       uint `gorm:"primary_key"`
+	Username string
+	Password string
+	Name     string
+	Age      int
 }
 
 var db gorm.DB
@@ -60,6 +63,12 @@ func setup() {
 	// Add default path
 	api.AddDefaultCrudPaths(&user)
 	api.AddDefaultQueryPath(&user)
+	api.AddDefaultAuthPaths(&user)
+
+	goal.RegisterUserModel(&user)
+
+	store := sessions.NewCookieStore([]byte("something-very-secret"))
+	goal.InitSessionStore(store)
 
 	// Setup testing server
 	server = httptest.NewServer(api.Mux())
