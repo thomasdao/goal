@@ -32,13 +32,13 @@ func RegisterUserModel(user interface{}) {
 }
 
 // getUserResource returns a new variable based on reflection
-// e.g var user User
+// e.g user := &User{}
 func getUserResource() (interface{}, error) {
 	if userType == nil {
 		return nil, errors.New("User model was not registered")
 	}
 
-	return reflect.Zero(userType).Interface(), nil
+	return reflect.New(userType).Interface(), nil
 }
 
 // SetUserSession sets current user to session
@@ -79,21 +79,21 @@ func GetCurrentUser(req *http.Request) (interface{}, error) {
 	// Load user from Cache or from database
 	exists := false
 	if Pool() != nil {
-		cacheKey := DefaultRedisKey(TableName(&user), userID)
+		cacheKey := DefaultRedisKey(TableName(user), userID)
 		exists, err = RedisExists(cacheKey)
 		if err == nil && exists {
-			err = RedisGet(cacheKey, &user)
+			err = RedisGet(cacheKey, user)
 
 			if err == nil {
-				return &user, nil
+				return user, nil
 			}
 		}
 	}
 
 	// If data not exists in Redis, load from database
 	if !exists {
-		err = db.First(&user, userID).Error
-		return &user, err
+		err = db.First(user, userID).Error
+		return user, err
 	}
 
 	return nil, errors.New("invalid session data")

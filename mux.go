@@ -15,9 +15,19 @@ type API struct {
 	muxInitialized bool
 }
 
+var sharedAPI *API
+
 // NewAPI allocates and returns a new API.
 func NewAPI() *API {
-	return &API{}
+	if sharedAPI == nil {
+		sharedAPI = &API{}
+	}
+	return sharedAPI
+}
+
+// SharedAPI return API instance
+func SharedAPI() *API {
+	return sharedAPI
 }
 
 // Mux returns Gorilla's mux.Router used by an API. If a mux

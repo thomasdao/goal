@@ -3,6 +3,7 @@ package goal_test
 import (
 	"bytes"
 	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"testing"
 
@@ -39,42 +40,38 @@ func TestRegister(t *testing.T) {
 	setup()
 	defer tearDown()
 
-	var json = []byte(`{"Name":"Thomas", "Age": 28}`)
-	req, _ := http.NewRequest("POST", userURL(), bytes.NewBuffer(json))
+	res := httptest.NewRecorder()
+
+	var json = []byte(`{"username":"thomasdao", "password": "something-secret"}`)
+	req, _ := http.NewRequest("POST", "/auth/register", bytes.NewBuffer(json))
 	req.Header.Set("Content-Type", "application/json")
 
-	// Get response
-	client := &http.Client{}
-	res, err := client.Do(req)
+	goal.SharedAPI().Mux().ServeHTTP(res, req)
 
-	if err != nil {
-		t.Error(err)
-	}
-
-	if res.StatusCode != 200 {
-		t.Error("Request Failed ", res.StatusCode)
-		return
+	// Make sure cookies is set properly
+	hdr := res.Header()
+	cookies, ok := hdr["Set-Cookie"]
+	if !ok || len(cookies) != 1 {
+		t.Fatal("No cookies. Header:", hdr)
 	}
 
 	// Make sure db has one object
 	var user testuser
-	db.Where("name = ?", "Thomas").First(&user)
+	db.Where("username = ?", "thomasdao").First(&user)
 	if &user == nil {
 		t.Error("Fail to save object to database")
 		return
 	}
 
-	if user.Name != "Thomas" || user.Age != 28 {
-		t.Error("Save wrong data or missing data")
+	// Make sure user is the same with current user from session
+	nextReq, _ := http.NewRequest("POST", "/auth/register", bytes.NewBuffer(json))
+	nextReq.Header.Add("Cookie", cookies[0])
+	currentUser, err := goal.GetCurrentUser(nextReq)
+	if err != nil {
+		t.Error(err)
 	}
 
-	// Make sure data exists in Redis
-	if goal.Pool() != nil {
-		key := goal.RedisKey(user)
-		var redisUser testuser
-		goal.RedisGet(key, &redisUser)
-		if !reflect.DeepEqual(user, redisUser) {
-			t.Error("Incorrect data in redis, ", user, redisUser)
-		}
+	if !reflect.DeepEqual(&user, currentUser) {
+		t.Error("Get invalid current user from request")
 	}
 }

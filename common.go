@@ -23,20 +23,20 @@ func renderJSON(rw http.ResponseWriter, request *http.Request, handler simpleRes
 	}
 
 	code, data, err := handler(rw, request)
-	if code == 403 {
-		rw.WriteHeader(http.StatusUnauthorized)
+	rw.WriteHeader(code)
+
+	if err != nil {
+		rw.Write([]byte(err.Error()))
 		return
 	}
 
 	var content []byte
 	content, err = json.Marshal(data)
 	if err != nil {
-		rw.WriteHeader(http.StatusInternalServerError)
 		rw.Write([]byte(err.Error()))
 		return
 	}
 
 	rw.Header().Set("Content-Type", "application/json")
-	rw.WriteHeader(code)
 	rw.Write(content)
 }

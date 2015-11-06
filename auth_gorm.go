@@ -1,10 +1,12 @@
 package goal
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 
+	"github.com/jinzhu/gorm"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -29,40 +31,46 @@ func validateCols(usernameCol string, passwordCol string, user interface{}) erro
 func RegisterWithPassword(
 	w http.ResponseWriter, request *http.Request,
 	usernameCol string, passwordCol string) (interface{}, error) {
-
 	user, err := getUserResource()
 	if err != nil {
 		return nil, err
 	}
 
-	err = request.ParseForm()
+	// Parse request body into resource
+	decoder := json.NewDecoder(request.Body)
+	var values map[string]string
+	err = decoder.Decode(&values)
 	if err != nil {
 		return nil, err
 	}
 
-	username := request.FormValue("username")
-	password := request.FormValue("password")
+	username := values["username"]
+	password := values["password"]
 
 	if username == "" || password == "" {
 		return nil, errors.New("username or password is not found")
 	}
 
-	err = validateCols(usernameCol, passwordCol, &user)
+	fmt.Println(user)
+	err = validateCols(usernameCol, passwordCol, user)
+
 	if err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
 
 	// Search db, if a username is already defined, return error
 	qry := fmt.Sprintf("%s = ?", usernameCol)
-	db.Where(qry, username).First(&user)
-	if user != nil {
-		errorMsg := fmt.Sprintf("Username is already registered: %s", username)
-		return nil, errors.New(errorMsg)
+	err = db.Where(qry, username).First(user).Error
+	if err != nil {
+		if err != gorm.RecordNotFound {
+			return nil, err
+		}
 	}
 
 	// Since user was populated with extra data, we need to
 	// setup new scope
-	scope := db.NewScope(&user)
+	scope := db.NewScope(user)
 
 	// Save a new record to db
 	scope.SetColumn(usernameCol, username)
@@ -76,9 +84,9 @@ func RegisterWithPassword(
 	err = scope.DB().New().Create(scope.Value).Error
 
 	// Set current session
-	SetUserSession(w, request, &user)
+	SetUserSession(w, request, user)
 
-	return &user, nil
+	return user, nil
 }
 
 // LoginWithPassword checks if username and password correct
@@ -137,9 +145,9 @@ func LoginWithPassword(
 	}
 
 	// Set current session
-	SetUserSession(w, request, &user)
+	SetUserSession(w, request, user)
 
-	return &user, nil
+	return user, nil
 }
 
 // HandleLogout let user logout from the system
