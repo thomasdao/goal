@@ -82,6 +82,9 @@ func RegisterWithPassword(
 	}
 	scope.SetColumn(passwordCol, hashedPw)
 	err = scope.DB().New().Create(scope.Value).Error
+	if err != nil {
+		return nil, err
+	}
 
 	// Set current session
 	SetUserSession(w, request, user)
