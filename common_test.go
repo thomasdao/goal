@@ -21,6 +21,11 @@ type testuser struct {
 	Age      int
 }
 
+type article struct {
+	ID     uint `gorm:"primary_key"`
+	author *testuser
+}
+
 var db gorm.DB
 
 var (
@@ -62,12 +67,17 @@ func setup() {
 
 	// Initialize resource
 	var user testuser
-	db.AutoMigrate(&user)
+
+	models := []interface{}{&user, &article{}}
 
 	// Add default path
-	api.AddDefaultCrudPaths(&user)
-	api.AddDefaultQueryPath(&user)
-	api.AddDefaultAuthPaths(&user)
+	for _, model := range models {
+		db.AutoMigrate(model)
+
+		api.AddDefaultCrudPaths(model)
+		api.AddDefaultQueryPath(model)
+		api.AddDefaultAuthPaths(model)
+	}
 
 	goal.RegisterUserModel(&user)
 
