@@ -45,10 +45,10 @@ func Read(resource interface{}, request *http.Request) (int, interface{}, error)
 	// Attempt to retrieve from redis first, if not exist, retrieve from
 	// database and cache it
 	var err error
-	if Pool() != nil {
+	if SharedCache != nil {
 		name := TableName(resource)
-		redisKey := DefaultRedisKey(name, id)
-		err = RedisGet(redisKey, resource)
+		redisKey := DefaultCacheKey(name, id)
+		err = SharedCache.Get(redisKey, resource)
 		if err == nil && resource != nil {
 			// Check if resource is authorized
 			err = CanPerform(resource, request, true)
@@ -67,9 +67,9 @@ func Read(resource interface{}, request *http.Request) (int, interface{}, error)
 	}
 
 	// Save to redis
-	if Pool() != nil {
-		key := RedisKey(resource)
-		RedisSet(key, resource)
+	if SharedCache != nil {
+		key := CacheKey(resource)
+		SharedCache.Set(key, resource)
 	}
 
 	// Check if resource is authorized

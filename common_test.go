@@ -51,7 +51,11 @@ func setup() {
 		return c, err
 	}, *maxConnections)
 
-	goal.InitRedisPool(pool)
+	redisCache := &goal.RedisCache{}
+	err = redisCache.InitRedisPool(pool)
+	if err == nil {
+		goal.RegisterCacher(redisCache)
+	}
 
 	// Initialize API
 	api := goal.NewAPI()

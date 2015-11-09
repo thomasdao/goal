@@ -78,11 +78,11 @@ func GetCurrentUser(req *http.Request) (interface{}, error) {
 
 	// Load user from Cache or from database
 	exists := false
-	if Pool() != nil {
-		cacheKey := DefaultRedisKey(TableName(user), userID)
-		exists, err = RedisExists(cacheKey)
+	if SharedCache != nil {
+		cacheKey := DefaultCacheKey(TableName(user), userID)
+		exists, err = SharedCache.Exists(cacheKey)
 		if err == nil && exists {
-			err = RedisGet(cacheKey, user)
+			err = SharedCache.Get(cacheKey, user)
 
 			if err == nil {
 				return user, nil

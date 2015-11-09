@@ -63,10 +63,10 @@ func TestCreate(t *testing.T) {
 	}
 
 	// Make sure data exists in Redis
-	if goal.Pool() != nil {
-		key := goal.RedisKey(user)
+	if goal.SharedCache != nil {
+		key := goal.CacheKey(user)
 		var redisUser testuser
-		goal.RedisGet(key, &redisUser)
+		goal.SharedCache.Get(key, &redisUser)
 		if !reflect.DeepEqual(user, redisUser) {
 			t.Error("Incorrect data in redis, ", user, redisUser)
 		}
@@ -118,16 +118,16 @@ func TestGet(t *testing.T) {
 	}
 
 	// Make sure data exists in Redis
-	if goal.Pool() != nil {
-		key := goal.RedisKey(user)
+	if goal.SharedCache != nil {
+		key := goal.CacheKey(user)
 
 		// Test data exists in Redis
-		if exist, _ := goal.RedisExists(key); !exist {
+		if exist, _ := goal.SharedCache.Exists(key); !exist {
 			t.Error("Data should be saved into Redis")
 		}
 
 		var redisUser testuser
-		goal.RedisGet(key, &redisUser)
+		goal.SharedCache.Get(key, &redisUser)
 		if !reflect.DeepEqual(user, &redisUser) {
 			t.Error("Incorrect data in redis, ", user, &redisUser)
 		}
@@ -170,10 +170,10 @@ func TestPut(t *testing.T) {
 	}
 
 	// Make sure data exists in Redis
-	if goal.Pool() != nil {
-		key := goal.RedisKey(user)
+	if goal.SharedCache != nil {
+		key := goal.CacheKey(user)
 		var redisUser testuser
-		goal.RedisGet(key, &redisUser)
+		goal.SharedCache.Get(key, &redisUser)
 		if !reflect.DeepEqual(result, redisUser) {
 			t.Error("Incorrect data in redis, ", result, redisUser)
 		}
@@ -213,9 +213,9 @@ func TestDelete(t *testing.T) {
 	}
 
 	// Make sure no more data in redis
-	if goal.Pool() != nil {
-		key := goal.RedisKey(user)
-		if exist, _ := goal.RedisExists(key); exist {
+	if goal.SharedCache != nil {
+		key := goal.CacheKey(user)
+		if exist, _ := goal.SharedCache.Exists(key); exist {
 			t.Error("Data should be deleted from Redis when object is deleted")
 		}
 	}
