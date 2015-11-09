@@ -40,13 +40,13 @@ func TestSuccessQueryParamsFind(t *testing.T) {
 
 	// Test success case
 
-	item := goal.QueryItem{}
+	item := &goal.QueryItem{}
 	item.Key = "name"
 	item.Op = "="
 	item.Val = "Thomas"
 
 	params := &goal.QueryParams{}
-	params.Where = []goal.QueryItem{item}
+	params.Where = []*goal.QueryItem{item}
 
 	var results []testuser
 	var user testuser
@@ -56,23 +56,23 @@ func TestSuccessQueryParamsFind(t *testing.T) {
 		t.Error("Error: query should return 1 result")
 	}
 
-	orItem := goal.QueryItem{}
+	orItem := &goal.QueryItem{}
 	orItem.Key = "name"
 	orItem.Op = "="
 	orItem.Val = "Alan"
-	item.Or = []goal.QueryItem{orItem}
-	params.Where = []goal.QueryItem{item}
+	item.Or = []*goal.QueryItem{orItem}
+	params.Where = []*goal.QueryItem{item}
 	params.Find(&user, &results)
 
 	if results == nil || len(results) != 2 {
 		t.Error("Error: query should return 2 result")
 	}
 
-	andItem := goal.QueryItem{}
+	andItem := &goal.QueryItem{}
 	andItem.Key = "age"
 	andItem.Op = ">"
 	andItem.Val = "29"
-	params.Where = []goal.QueryItem{item, andItem}
+	params.Where = []*goal.QueryItem{item, andItem}
 	params.Find(&user, &results)
 
 	if results == nil || len(results) != 1 {
@@ -89,13 +89,13 @@ func TestInvalidQueryParamsFind(t *testing.T) {
 
 	// Test success case
 
-	item := goal.QueryItem{}
+	item := &goal.QueryItem{}
 	item.Key = "name"
 	item.Op = "hello"
 	item.Val = "Thomas"
 
 	params := &goal.QueryParams{}
-	params.Where = []goal.QueryItem{item}
+	params.Where = []*goal.QueryItem{item}
 
 	var results []testuser
 	var user testuser
@@ -104,11 +104,11 @@ func TestInvalidQueryParamsFind(t *testing.T) {
 		t.Error("Error: Query operator should be invalid")
 	}
 
-	item = goal.QueryItem{}
+	item = &goal.QueryItem{}
 	item.Key = "hello"
 	item.Op = "="
 	item.Val = "Thomas"
-	params.Where = []goal.QueryItem{item}
+	params.Where = []*goal.QueryItem{item}
 
 	err = params.Find(&user, &results)
 	if err == nil {
@@ -121,13 +121,13 @@ func TestQueryViaAPI(t *testing.T) {
 	defer tearDown()
 
 	createUsers()
-	item := goal.QueryItem{}
+	item := &goal.QueryItem{}
 	item.Key = "name"
 	item.Op = "="
 	item.Val = "Thomas"
 
 	params := &goal.QueryParams{}
-	params.Where = []goal.QueryItem{item}
+	params.Where = []*goal.QueryItem{item}
 
 	query, _ := json.Marshal(params)
 

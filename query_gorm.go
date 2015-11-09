@@ -41,10 +41,10 @@ func allowedOps() map[string]bool {
 // QueryItem defines most basic element of a query.
 // For example: name = Thomas
 type QueryItem struct {
-	Key string      `json:"key"`
-	Op  string      `json:"op"`
-	Val interface{} `json:"val"`
-	Or  []QueryItem `json:"or"`
+	Key string       `json:"key"`
+	Op  string       `json:"op"`
+	Val interface{}  `json:"val"`
+	Or  []*QueryItem `json:"or"`
 }
 
 func (item *QueryItem) getQuery(scope *gorm.Scope) (string, error) {
@@ -73,7 +73,7 @@ func (item *QueryItem) getQuery(scope *gorm.Scope) (string, error) {
 // QueryParams defines structure of a query. Where clause
 // may include multiple QueryItem and connect by "AND" operator
 type QueryParams struct {
-	Where   []QueryItem     `json:"where"`
+	Where   []*QueryItem    `json:"where"`
 	Limit   int64           `json:"limit"`
 	Order   map[string]bool `json:"order"`
 	Include []string        `json:"include"`
