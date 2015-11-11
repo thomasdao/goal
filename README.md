@@ -6,7 +6,7 @@ My objective for Goal is to provide ready to use implementation for CRUD, basic 
 
 # Setup Model and database connection
 
-Since Goal relies on Gorm, you can just define your models as described in `Gorm` documentation. For example:
+Since Goal relies on Gorm, you can just define your models as described in [Gorm](https://github.com/jinzhu/gorm) documentation. For example:
 
 ```go
 type testuser struct {
@@ -73,8 +73,8 @@ func main() {
   // Add paths to correct model
   user := &testuser{}
   db.AutoMigrate(user)
-	api.AddCrudResource(user, "/testuser", "/testuser/{id:[a-zA-Z0-9]+}")
-	api.AddQueryPath(user, "/query/testuser/{query}")
+  api.AddCrudResource(user, "/testuser", "/testuser/{id:[a-zA-Z0-9]+}")
+  api.AddQueryPath(user, "/query/testuser/{query}")
 
   http.Handle("/", r)
   http.ListenAndServe(":8080", api.Mux())
@@ -103,6 +103,69 @@ models := []interface{}{&testuser{}, &article{}}
 // Add default path
 for _, model := range models {
   goal.RegisterModel(model)
+}
+```
+
+# How does client interact with Goal
+
+Client sends JSON in the request body to interact with Goal. The payload data format is quite straightforward for basic CRUD:
+
+```go
+// Create a test user
+var json = []byte(`{"Name":"Thomas", "Age": 28}`)
+req, _ := http.NewRequest("POST", "/testuser", bytes.NewBuffer(json))
+req.Header.Set("Content-Type", "application/json")
+client := &http.Client{}
+res, err := client.Do(req)
+
+// Get user with id 10
+req, _ := http.NewRequest("GET", "/testuser/10", nil)
+req.Header.Set("Content-Type", "application/json")
+client := &http.Client{}
+res, err := client.Do(req)
+```
+
+For query, the payload data is a struct represents query filters you normally find with SQL:
+
+```go
+// QueryItem defines most basic element of a query.
+// For example: name = Thomas
+type QueryItem struct {
+	Key string       `json:"key"`
+	Op  string       `json:"op"`
+	Val interface{}  `json:"val"`
+	Or  []*QueryItem `json:"or"`
+}
+
+type QueryParams struct {
+	Where   []*QueryItem    `json:"where"`
+	Limit   int64           `json:"limit"`
+	Order   map[string]bool `json:"order"`
+	Include []string        `json:"include"`
+}
+```
+
+Goal validates all operators and column name to protect your database from SQL injection. To send a query request, client should construct the QueryParams, convert it to json, escape it to be URL safe and send that to Goal API server:
+
+```go
+func sendQuery() {
+  item := &goal.QueryItem{}
+	item.Key = "name"
+	item.Op = "="
+	item.Val = "Thomas"
+
+	params := &goal.QueryParams{}
+	params.Where = []*goal.QueryItem{item}
+
+	query, _ := json.Marshal(params)
+  queryPath := fmt.Sprint("/query/testuser/", url.QueryEscape(string(query)))
+
+	req, _ := http.NewRequest("GET", queryPath, nil)
+	req.Header.Set("Content-Type", "application/json")
+
+	// Get response
+	client := &http.Client{}
+	res, err := client.Do(req)
 }
 ```
 
@@ -135,7 +198,7 @@ func SetupRedis() {
 }
 ```
 
-`redisCache` is just instance of `goal.Cacher` interface. By calling `goal.RegisterCacher`, goal can use the cacher to quickly get and set your data into cache. If you use Memcached or other type of cache, just implement Cacher interface for your respective cache and register it with Goal.
+`redisCache` is an instance of `goal.Cacher` interface. By calling `goal.RegisterCacher`, goal can use the cacher to quickly get and set your data into cache. If you use Memcached or other type of cache, just implement Cacher interface for your respective cache and register it with Goal.
 
 # Authentication
 
