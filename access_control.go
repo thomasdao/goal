@@ -11,32 +11,42 @@ type Roler interface {
 	Role() []string
 }
 
-// Permission defines which role has read or write access
-type Permission struct {
-	Read  []string
-	Write []string
+// PermitReader allows authenticated user to read the record
+type PermitReader interface {
+	PermitRead() []string
 }
 
-// Permitter defines permission model for each record
-type Permitter interface {
-	Permit() *Permission
+// PermitWriter allows authenticated user to write the record
+type PermitWriter interface {
+	PermitWrite() []string
 }
 
 // CanPerform check if a roler can access a resource (read/write)
 // If read is false, then it will check for write permission
 // It will return error if the check is failed
 func CanPerform(resource interface{}, request *http.Request, read bool) error {
-	permitter, ok := resource.(Permitter)
+	unauthorized := errors.New("unauthorized access")
 
-	// If resource does not define permission model, it assumes can
-	// be interacted by public
-	if !ok {
-		return nil
+	// If a resource does not define PermitRead and PermitWrite method,
+	// we assume it is private.
+	var roles []string
+	if read {
+		permitReader, ok := resource.(PermitReader)
+		if ok {
+			roles = permitReader.PermitRead()
+		} else {
+			return unauthorized
+		}
+	} else {
+		permitWriter, ok := resource.(PermitWriter)
+		if ok {
+			roles = permitWriter.PermitWrite()
+		} else {
+			return unauthorized
+		}
 	}
 
-	permission := permitter.Permit()
-
-	if permission == nil {
+	if len(roles) == 0 {
 		return nil
 	}
 
@@ -50,15 +60,6 @@ func CanPerform(resource interface{}, request *http.Request, read bool) error {
 	if user != nil {
 		roler, _ = user.(Roler)
 	}
-
-	var roles []string
-	if read {
-		roles = permission.Read
-	} else {
-		roles = permission.Write
-	}
-
-	unauthorized := errors.New("unauthorized access")
 
 	// If roles is not defined, then this resource does not allow that action
 	if roler == nil || roles == nil {

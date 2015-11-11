@@ -21,9 +21,20 @@ type testuser struct {
 	Age      int
 }
 
+func (user *testuser) PermitRead() []string {
+	return nil
+}
+
+func (user *testuser) PermitWrite() []string {
+	return nil
+}
+
 type article struct {
 	ID     uint `gorm:"primary_key"`
-	author *testuser
+	Author *testuser
+	Title  string
+	Read   string
+	Write  string
 }
 
 var db gorm.DB
