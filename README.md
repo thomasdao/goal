@@ -108,7 +108,7 @@ for _, model := range models {
 
 # Interact with Goal
 
-Client sends JSON in the request body to interact with Goal. The payload data format is quite straightforward for basic CRUD:
+Client sends JSON in the request body to interact with Goal. You need to make sure the JSON format can be parsed into your model:
 
 ```go
 // Create a test user
