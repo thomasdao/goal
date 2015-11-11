@@ -26,8 +26,8 @@ func InitSessionStore(store sessions.Store) {
 
 var userType reflect.Type
 
-// RegisterUserModel lets goal which model act as user
-func RegisterUserModel(user interface{}) {
+// SetUserModel lets goal which model act as user
+func SetUserModel(user interface{}) {
 	userType = reflect.TypeOf(user).Elem()
 }
 

@@ -51,7 +51,6 @@ func RegisterWithPassword(
 		return nil, errors.New("username or password is not found")
 	}
 
-	fmt.Println(user)
 	err = validateCols(usernameCol, passwordCol, user)
 
 	if err != nil {

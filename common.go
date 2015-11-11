@@ -42,6 +42,14 @@ func renderJSON(rw http.ResponseWriter, request *http.Request, handler simpleRes
 	rw.Write(content)
 }
 
+// RegisterModel initializes default routes for a model
+func RegisterModel(resource interface{}) {
+	db.AutoMigrate(resource)
+	sharedAPI.AddDefaultCrudPaths(resource)
+	sharedAPI.AddDefaultQueryPath(resource)
+	sharedAPI.AddDefaultAuthPaths(resource)
+}
+
 // dynamicSlice creates a slice with element with resource type
 // Copied from http://stackoverflow.com/a/25386460/622510 (Thanks @nemo)
 func dynamicSlice(resource interface{}) interface{} {

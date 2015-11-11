@@ -3,7 +3,6 @@ package goal_test
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"reflect"
@@ -188,8 +187,6 @@ func TestDelete(t *testing.T) {
 	user.Name = "Thomas"
 	user.Age = 28
 	db.Create(user)
-
-	fmt.Println("Object Id created", user.ID)
 
 	req, _ := http.NewRequest("DELETE", idURL(user.ID), nil)
 	req.Header.Set("Content-Type", "application/json")

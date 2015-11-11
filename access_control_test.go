@@ -75,10 +75,9 @@ func TestCanRead(t *testing.T) {
 	// Get response
 	client := &http.Client{}
 	resp, err := client.Do(nextReq)
-	fmt.Println(resp)
 	resp.Body.Close()
 
-	if err != nil {
+	if resp.StatusCode != 403 || err != nil {
 		t.Error("Request should be unauthorized because thomasdao doesn't have admin role")
 	}
 }

@@ -69,7 +69,6 @@ func (cache *RedisCache) Delete(key string) error {
 
 	defer conn.Close()
 
-	fmt.Printf("UNSET %s", key)
 	_, err = conn.Do("DEL", key)
 	return err
 }

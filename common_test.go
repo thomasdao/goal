@@ -72,14 +72,10 @@ func setup() {
 
 	// Add default path
 	for _, model := range models {
-		db.AutoMigrate(model)
-
-		api.AddDefaultCrudPaths(model)
-		api.AddDefaultQueryPath(model)
-		api.AddDefaultAuthPaths(model)
+		goal.RegisterModel(model)
 	}
 
-	goal.RegisterUserModel(&user)
+	goal.SetUserModel(&user)
 
 	store := sessions.NewCookieStore([]byte("something-very-secret"))
 	goal.InitSessionStore(store)
