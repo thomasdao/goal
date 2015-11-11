@@ -47,7 +47,6 @@ func RegisterModel(resource interface{}) {
 	db.AutoMigrate(resource)
 	sharedAPI.AddDefaultCrudPaths(resource)
 	sharedAPI.AddDefaultQueryPath(resource)
-	sharedAPI.AddDefaultAuthPaths(resource)
 }
 
 // dynamicSlice creates a slice with element with resource type
