@@ -3,7 +3,6 @@ package goal_test
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -36,8 +35,7 @@ func (art *article) Post(w http.ResponseWriter, request *http.Request) (int, int
 }
 
 func (art *article) Query(w http.ResponseWriter, request *http.Request) (int, interface{}, error) {
-	var arts []article
-	return goal.HandleQuery(art, request, &arts)
+	return goal.HandleQuery(art, request)
 }
 
 func TestCanRead(t *testing.T) {
@@ -77,19 +75,10 @@ func TestCanRead(t *testing.T) {
 	// Get response
 	client := &http.Client{}
 	resp, err := client.Do(nextReq)
-	fmt.Println(err)
+	fmt.Println(resp)
+	resp.Body.Close()
 
-	if resp.StatusCode != 403 {
-		t.Error("Request should be unauthorized because thomasdao doesn't have admin role")
-		return
-	}
-
-	defer resp.Body.Close()
-	var content []byte
-	content, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
-		t.Error(err)
-		return
+		t.Error("Request should be unauthorized because thomasdao doesn't have admin role")
 	}
-	fmt.Println(string(content))
 }
