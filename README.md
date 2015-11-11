@@ -42,7 +42,7 @@ func setupDB()  {
 
 # Setup basic CRUD and Query
 
-Goal simplifies many ideas from [Sleepy Framework](https://github.com/dougblack/sleepy), where each model defines methods to handle basic CRUD and Query for that model. Goal provides ready-to-use implementation for each of these method. If you don't want to support any method in your API, just do not implement it, Goal will return 405 HTTP error code to the client.
+Goal simplifies many ideas from [Sleepy Framework](https://github.com/dougblack/sleepy), where each model defines methods to handle basic CRUD and Query for its table. Goal provides ready-to-use implementation for each of these method. If you don't want to support any method in your API, just do not implement it, Goal will return 405 HTTP error code to the client.
 
 ```go
 // Define HTTP methods to support
