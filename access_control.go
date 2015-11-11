@@ -28,21 +28,17 @@ func CanPerform(resource interface{}, request *http.Request, read bool) error {
 	unauthorized := errors.New("unauthorized access")
 
 	// If a resource does not define PermitRead and PermitWrite method,
-	// we assume it is private.
+	// we assume it is public.
 	var roles []string
 	if read {
 		permitReader, ok := resource.(PermitReader)
 		if ok {
 			roles = permitReader.PermitRead()
-		} else {
-			return unauthorized
 		}
 	} else {
 		permitWriter, ok := resource.(PermitWriter)
 		if ok {
 			roles = permitWriter.PermitWrite()
-		} else {
-			return unauthorized
 		}
 	}
 

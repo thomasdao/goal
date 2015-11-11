@@ -21,14 +21,6 @@ type testuser struct {
 	Age      int
 }
 
-func (user *testuser) PermitRead() []string {
-	return nil
-}
-
-func (user *testuser) PermitWrite() []string {
-	return nil
-}
-
 type article struct {
 	ID     uint `gorm:"primary_key"`
 	Author *testuser
