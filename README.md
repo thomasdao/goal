@@ -1,6 +1,6 @@
 I like [Parse](https://parse.com) for its ease of use and I think it's really nice example about well-designed API. However it is probably best for mobile backend where you don't need too much control at server side. Its query can be slow since we don't have control over index, and many services are not available like cache or websocket.
 
-My objective for Goal is to provide basic Parse features: solid implementation for CRUD, query, authentication and permission model, so it can be quickly setup and run as a backend for your mobile app.
+My objective for Goal is to provide basic Parse features: solid implementation for CRUD, query, authentication and permission model, so it can be quickly setup and run as a backend for your mobile app. It is also flexible and easily extensible.
 
 Goal relies on 3 popular Go libraries: [Gorm](https://github.com/jinzhu/gorm), Gorilla [Mux](www.gorillatoolkit.org/pkg/mux) and [Sessions](www.gorillatoolkit.org/pkg/sessions). You can use familiar SQL database to store your data.
 
