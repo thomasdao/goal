@@ -76,7 +76,7 @@ func main() {
   api.AddCrudResource(user, "/testuser", "/testuser/{id:[a-zA-Z0-9]+}")
   api.AddQueryResource(user, "/query/testuser/{query}")
 
-  http.Handle("/", r)
+  // Run the API
   http.ListenAndServe(":8080", api.Mux())
 }
 ```
