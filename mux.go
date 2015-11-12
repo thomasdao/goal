@@ -31,7 +31,7 @@ func SharedAPI() *API {
 }
 
 // Mux returns Gorilla's mux.Router used by an API. If a mux
-// does not yet exist, a new one will be created and returned.
+// does not yet exist, a new one will be created and returned
 func (api *API) Mux() *mux.Router {
 	if api.muxInitialized {
 		return api.mux
