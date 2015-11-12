@@ -61,7 +61,7 @@ func Read(resource interface{}, request *http.Request) (int, interface{}, error)
 	}
 
 	// Retrieve from database
-	fmt.Println("resource ", resource)
+	fmt.Printf("resource %#v, %v", resource, (resource == nil))
 	err = db.First(resource, id).Error
 	if err != nil {
 		return 500, nil, err
