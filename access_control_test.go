@@ -43,14 +43,14 @@ func TestCanRead(t *testing.T) {
 
 	art := &article{}
 	art.Author = author
-	art.Permission = &goal.Permission{
+	art.Permission = goal.Permission{
 		Read:  `["admin", "ceo"]`,
 		Write: `["admin", "ceo"]`,
 	}
 	art.Title = "Top Secret"
 
 	err := db.Create(art).Error
-	fmt.Println("Create article")
+	fmt.Printf("Create article %#v", art)
 	if err != nil {
 		fmt.Println("error create article ", err)
 	}

@@ -25,7 +25,7 @@ type article struct {
 	ID     uint `gorm:"primary_key"`
 	Author *testuser
 	Title  string
-	*goal.Permission
+	goal.Permission
 }
 
 var db gorm.DB
