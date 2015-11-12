@@ -101,14 +101,6 @@ func GetCurrentUser(req *http.Request) (interface{}, error) {
 
 // ClearUserSession removes the current user from session
 func ClearUserSession(w http.ResponseWriter, req *http.Request) error {
-	_, err := SharedSessionStore.Get(req, SessionName)
-	if err != nil {
-		return err
-	}
-
-	// delete(session.Values, SessionKey)
-	// session.Options = &sessions.Options{MaxAge: -1, Path: "/"}
-	// err = session.Save(req, w)
 	http.SetCookie(w, nil)
 	return nil
 }
