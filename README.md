@@ -287,6 +287,15 @@ type article struct {
 }
 ```
 
+You could initialize the Permission like below:
+
+```go
+art.Permission = &goal.Permission{
+  Read:  `["admin", "ceo"]`,
+  Write: `["admin", "ceo"]`,
+}
+```
+
 If a record doesn't implement any `Permit*` interfaces above, Goal assumes it can be accessed by public
 
 # License
