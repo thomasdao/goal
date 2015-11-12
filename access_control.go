@@ -1,6 +1,7 @@
 package goal
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 )
@@ -19,6 +20,41 @@ type PermitReader interface {
 // PermitWriter allows authenticated user to write the record
 type PermitWriter interface {
 	PermitWrite() []string
+}
+
+// Permission makes it easier to implement access control
+type Permission struct {
+	Read  string
+	Write string
+}
+
+// PermitRead conforms to PermitReader interface
+func (p *Permission) PermitRead() []string {
+	if p.Read != "" {
+		var roles []string
+		err := json.Unmarshal([]byte(p.Read), &roles)
+		if err != nil {
+			return nil
+		}
+
+		return roles
+	}
+	return nil
+}
+
+// PermitWrite conforms to PermitWriter interface
+func (p *Permission) PermitWrite() []string {
+	if p.Write != "" {
+		var roles []string
+		err := json.Unmarshal([]byte(p.Write), &roles)
+		if err != nil {
+			return nil
+		}
+
+		return roles
+	}
+
+	return nil
 }
 
 // CanPerform check if a roler can access a resource (read/write)

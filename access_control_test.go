@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"github.com/thomasdao/goal"
@@ -31,14 +30,6 @@ func (art *article) Query(w http.ResponseWriter, request *http.Request) (int, in
 	return goal.HandleQuery(art, request)
 }
 
-func (art *article) PermitRead() []string {
-	return strings.Split(art.Read, ",")
-}
-
-func (art *article) PermitWrite() []string {
-	return strings.Split(art.Write, ",")
-}
-
 func TestCanRead(t *testing.T) {
 	setup()
 	defer tearDown()
@@ -50,14 +41,17 @@ func TestCanRead(t *testing.T) {
 
 	art := &article{}
 	art.Author = author
-	art.Read = "admin, ceo"
-	art.Write = "admin, ceo"
+	art.Permission = &goal.Permission{
+		Read:  `["admin", "ceo"]`,
+		Write: `["admin", "ceo"]`,
+	}
 	art.Title = "Top Secret"
 
 	err := db.Create(art).Error
 	if err != nil {
 		fmt.Println("error create article ", err)
 	}
+
 	res := httptest.NewRecorder()
 
 	var json = []byte(`{"username":"thomasdao", "password": "something-secret"}`)

@@ -264,19 +264,30 @@ func (user *testuser) Role() []string {
 }
 ```
 
-For your record you want to protect, implements `goal.PermitWriter` and `goal.PermitReader` interface:
+For record you want to protect, implements `goal.PermitWriter` and `goal.PermitReader` interface:
 
 ```go
 func (art *article) PermitRead() []string {
-	return strings.Split(art.Read, ",")
+	return []string{"admin", "ceo"}
 }
 
 func (art *article) PermitWrite() []string {
-	return strings.Split(art.Write, ",")
+	return []string{"admin", "ceo"}
 }
 ```
 
-If a record doesn't implement any Permit* interfaces above, Goal assumes it can be accessed by public
+To make things easier, Goal provides `Permission` struct so you can embed directly into your own model. This will add a "read" and "write" string column to the table in your database. The format is simply a json array of roles, and it already conforms to PermitReader and PermitWriter interface.
+
+```go
+type article struct {
+	ID     uint `gorm:"primary_key"`
+	Author *testuser
+	Title  string
+	*goal.Permission
+}
+```
+
+If a record doesn't implement any `Permit*` interfaces above, Goal assumes it can be accessed by public
 
 # License
 
