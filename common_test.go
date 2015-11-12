@@ -68,17 +68,16 @@ func setup() {
 	api := goal.NewAPI()
 
 	// Initialize resource
-	var user testuser
 
-	models := []interface{}{&user, &article{}}
+	models := []interface{}{&testuser{}, &article{}}
 
 	// Add default path
 	for _, model := range models {
 		goal.RegisterModel(model)
 	}
 
-	goal.SetUserModel(&user)
-	api.AddDefaultAuthPaths(&user)
+	goal.SetUserModel(&testuser{})
+	api.AddDefaultAuthPaths(&testuser{})
 
 	store := sessions.NewCookieStore([]byte("something-very-secret"))
 	goal.InitSessionStore(store)
