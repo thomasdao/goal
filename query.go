@@ -23,9 +23,9 @@ func (api *API) queryHandler(resource interface{}) http.HandlerFunc {
 	}
 }
 
-// AddQueryPath allows model to support query based on request
+// AddQueryResource allows model to support query based on request
 // data, return filtered results back to client
-func (api *API) AddQueryPath(resource interface{}, path string) {
+func (api *API) AddQueryResource(resource interface{}, path string) {
 	api.Mux().Handle(path, api.queryHandler(resource))
 }
 
@@ -34,5 +34,5 @@ func (api *API) AddQueryPath(resource interface{}, path string) {
 // base on struct name
 func (api *API) AddDefaultQueryPath(resource interface{}) {
 	queryPath := fmt.Sprintf("/query/%s/{query}", TableName(resource))
-	api.AddQueryPath(resource, queryPath)
+	api.AddQueryResource(resource, queryPath)
 }

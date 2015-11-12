@@ -74,7 +74,7 @@ func main() {
   user := &testuser{}
   db.AutoMigrate(user)
   api.AddCrudResource(user, "/testuser", "/testuser/{id:[a-zA-Z0-9]+}")
-  api.AddQueryPath(user, "/query/testuser/{query}")
+  api.AddQueryResource(user, "/query/testuser/{query}")
 
   http.Handle("/", r)
   http.ListenAndServe(":8080", api.Mux())
