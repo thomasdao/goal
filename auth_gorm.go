@@ -31,6 +31,10 @@ func validateCols(usernameCol string, passwordCol string, user interface{}) erro
 func RegisterWithPassword(
 	w http.ResponseWriter, request *http.Request,
 	usernameCol string, passwordCol string) (interface{}, error) {
+	if request.Method != POST {
+		return nil, http.ErrNotSupported
+	}
+
 	user, err := getUserResource()
 	if err != nil {
 		return nil, err
@@ -96,6 +100,9 @@ func RegisterWithPassword(
 func LoginWithPassword(
 	w http.ResponseWriter, request *http.Request,
 	usernameCol string, passwordCol string) (interface{}, error) {
+	if request.Method != POST {
+		return nil, http.ErrNotSupported
+	}
 
 	user, err := getUserResource()
 	if err != nil {
@@ -107,8 +114,16 @@ func LoginWithPassword(
 		return nil, err
 	}
 
-	username := request.FormValue("username")
-	password := request.FormValue("password")
+	// Parse request body into resource
+	decoder := json.NewDecoder(request.Body)
+	var values map[string]string
+	err = decoder.Decode(&values)
+	if err != nil {
+		return nil, err
+	}
+
+	username := values["username"]
+	password := values["password"]
 
 	if username == "" || password == "" {
 		return nil, errors.New("username or password is not found")
@@ -116,7 +131,9 @@ func LoginWithPassword(
 
 	// Search db, if a username is not found, return error
 	qry := fmt.Sprintf("%s = ?", usernameCol)
-	err = db.Where(qry, username).First(user).Error
+
+	qryDB := db.Where(qry, username).First(user)
+	err = qryDB.Error
 	if err != nil {
 		return nil, err
 	}
@@ -127,18 +144,15 @@ func LoginWithPassword(
 	}
 
 	// Make sure the password is correct
-	scope := db.NewScope(user)
-	hashedPw, ok := scope.Get(passwordCol)
-	if !ok {
+	var hashs []string
+	qryDB.Pluck(passwordCol, &hashs)
+
+	if len(hashs) == 0 {
 		errorMsg := fmt.Sprintf("Unable to get value from column: %s", passwordCol)
 		return nil, errors.New(errorMsg)
 	}
 
-	var hashed string
-	hashed, ok = hashedPw.(string)
-	if !ok {
-		return nil, errors.New("Password is not valid string")
-	}
+	hashed := hashs[0]
 
 	// Comparing the password with the hash
 	err = bcrypt.CompareHashAndPassword([]byte(hashed), []byte(password))

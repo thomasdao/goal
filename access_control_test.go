@@ -56,7 +56,6 @@ func TestCanRead(t *testing.T) {
 
 	var json = []byte(`{"username":"thomasdao", "password": "something-secret"}`)
 	req, _ := http.NewRequest("POST", "/auth/register", bytes.NewBuffer(json))
-	req.Header.Set("Content-Type", "application/json")
 
 	goal.SharedAPI().Mux().ServeHTTP(res, req)
 

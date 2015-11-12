@@ -34,7 +34,6 @@ func TestCreate(t *testing.T) {
 
 	var json = []byte(`{"Name":"Thomas", "Age": 28}`)
 	req, _ := http.NewRequest("POST", userURL(), bytes.NewBuffer(json))
-	req.Header.Set("Content-Type", "application/json")
 
 	// Get response
 	client := &http.Client{}
@@ -82,7 +81,6 @@ func TestGet(t *testing.T) {
 	db.Create(user)
 
 	req, _ := http.NewRequest("GET", idURL(user.ID), nil)
-	req.Header.Set("Content-Type", "application/json")
 
 	// Get response
 	client := &http.Client{}
@@ -144,7 +142,6 @@ func TestPut(t *testing.T) {
 
 	var json = []byte(`{"Name":"Thomas Dao"}`)
 	req, _ := http.NewRequest("PUT", idURL(user.ID), bytes.NewBuffer(json))
-	req.Header.Set("Content-Type", "application/json")
 
 	// Get response
 	client := &http.Client{}
@@ -189,7 +186,6 @@ func TestDelete(t *testing.T) {
 	db.Create(user)
 
 	req, _ := http.NewRequest("DELETE", idURL(user.ID), nil)
-	req.Header.Set("Content-Type", "application/json")
 
 	// Get response
 	client := &http.Client{}
