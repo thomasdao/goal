@@ -285,14 +285,14 @@ type article struct {
 	ID     uint `gorm:"primary_key"`
 	Author *testuser
 	Title  string
-	*goal.Permission
+	goal.Permission
 }
 ```
 
 You could initialize the Permission like below:
 
 ```go
-art.Permission = &goal.Permission{
+art.Permission = goal.Permission{
   Read:  `["admin", "ceo"]`,
   Write: `["admin", "ceo"]`,
 }
