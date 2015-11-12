@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/thomasdao/goal.svg?branch=master)](https://travis-ci.org/thomasdao/goal)
+
 I like [Parse](https://parse.com) for its ease of use and I think it's really nice example about well-designed API. However it is probably best for mobile backend where you don't need too much control at server side. Its query can be slow since we don't have control over index, and many services are not available like cache or websocket.
 
 My objective for Goal is to provide basic Parse features: solid implementation for CRUD, query, authentication and permission model, so it can be quickly setup and run as a backend for your mobile app. It is also flexible and easily extensible.
