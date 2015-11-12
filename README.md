@@ -250,7 +250,7 @@ func (user *testuser) Logout(w http.ResponseWriter, req *http.Request) (int, int
 }
 ```
 
-You can utilize above implementations or roll out your own authentication mechanism, for example login with Facebook/Google etc. To properly set request/response session, use `SetUserSession(w, request, user)`. After user authenticated successfully, you can retrieve current user by `GetCurrentUser(request)`
+You can utilize above implementations or roll out your own authentication mechanism, for example login with Facebook/Google etc. To properly set request/response session, use `goal.SetUserSession(w, request, user)`. After user authenticated successfully, you can retrieve current user by `goal.GetCurrentUser(request)`
 
 # Access Controls
 
@@ -278,7 +278,7 @@ func (art *article) PermitWrite() []string {
 }
 ```
 
-To make things easier, Goal provides `Permission` struct so you can embed directly into your own model. This will add a "read" and "write" string column to the table in your database. The format is simply a json array of roles, and it already conforms to PermitReader and PermitWriter interface.
+To make things easier, Goal provides `goal.Permission` struct so you can embed directly into your own model. This will add a "read" and "write" string column to the table in your database. The format is simply a json array of roles, and it already conforms to PermitReader and PermitWriter interface.
 
 ```go
 type article struct {
