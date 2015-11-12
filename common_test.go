@@ -76,8 +76,9 @@ func setup() {
 		goal.RegisterModel(model)
 	}
 
-	goal.SetUserModel(&testuser{})
-	api.AddDefaultAuthPaths(&testuser{})
+	user := &testuser{}
+	goal.SetUserModel(user)
+	api.AddDefaultAuthPaths(user)
 
 	store := sessions.NewCookieStore([]byte("something-very-secret"))
 	goal.InitSessionStore(store)

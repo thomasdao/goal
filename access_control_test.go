@@ -39,8 +39,6 @@ func TestCanRead(t *testing.T) {
 	author.Username = "secret"
 	db.Create(author)
 
-	fmt.Println("Create author")
-
 	art := &article{}
 	art.Author = author
 	art.Permission = goal.Permission{
@@ -50,7 +48,6 @@ func TestCanRead(t *testing.T) {
 	art.Title = "Top Secret"
 
 	err := db.Create(art).Error
-	fmt.Printf("Create article %#v", art)
 	if err != nil {
 		fmt.Println("error create article ", err)
 	}
@@ -59,8 +56,6 @@ func TestCanRead(t *testing.T) {
 
 	var json = []byte(`{"username":"thomasdao", "password": "something-secret"}`)
 	req, _ := http.NewRequest("POST", "/auth/register", bytes.NewBuffer(json))
-
-	fmt.Println("Register thomasdao")
 
 	goal.SharedAPI().Mux().ServeHTTP(res, req)
 
@@ -71,10 +66,7 @@ func TestCanRead(t *testing.T) {
 		t.Fatal("No cookies. Header:", hdr)
 	}
 
-	fmt.Println("register success")
 	artURL := fmt.Sprint(server.URL, "/article/", art.ID)
-
-	fmt.Println("Before request artURL ", artURL)
 
 	// Make sure user is the same with current user from session
 	nextReq, _ := http.NewRequest("GET", artURL, nil)
@@ -84,8 +76,6 @@ func TestCanRead(t *testing.T) {
 	client := &http.Client{}
 	resp, err := client.Do(nextReq)
 	resp.Body.Close()
-
-	fmt.Println("After request artURL")
 
 	if resp.StatusCode != 403 || err != nil {
 		t.Error("Request should be unauthorized because thomasdao doesn't have admin role")
