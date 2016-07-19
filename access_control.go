@@ -9,7 +9,7 @@ import (
 // Roler is usually assigned to User class, which define which
 // role user has: ["admin", "user_id"]
 type Roler interface {
-	Role() []string
+	Roles() []string
 }
 
 // PermitReader allows authenticated user to read the record
@@ -100,7 +100,7 @@ func CanPerform(resource interface{}, request *http.Request, read bool) error {
 
 	// Check if roler has role inside permision
 	for _, change := range roles {
-		for _, role := range roler.Role() {
+		for _, role := range roler.Roles() {
 			if change == role {
 				return nil
 			}

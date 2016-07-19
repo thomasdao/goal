@@ -11,7 +11,7 @@ import (
 )
 
 // Satisfy Roler interface
-func (user *testuser) Role() []string {
+func (user *testuser) Roles() []string {
 	ownRole := fmt.Sprintf("testuser:%v", user.ID)
 	roles := []string{ownRole}
 
