@@ -33,6 +33,10 @@ func (user *testuser) CurrentRevision() string {
 	return fmt.Sprintf("%d", user.Rev)
 }
 
+func (user *testuser) SetNextRevision() {
+	user.Rev = user.Rev + 1
+}
+
 func TestCreate(t *testing.T) {
 	setup()
 	defer tearDown()
@@ -171,8 +175,8 @@ func TestPut(t *testing.T) {
 		t.Error("Update unsuccessful")
 	}
 
-	if result.ID != user.ID || result.Age != user.Age {
-		t.Error("Incorrect update")
+	if result.ID != user.ID || result.Age != user.Age || result.Rev != user.Rev+1 {
+		t.Errorf("Incorrect update %+v", result)
 	}
 
 	// Make sure data exists in Redis

@@ -19,7 +19,7 @@ type testuser struct {
 	Password string
 	Name     string
 	Age      int
-	Rev      int64
+	Rev      uint64
 }
 
 type article struct {

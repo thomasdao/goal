@@ -165,6 +165,7 @@ func Update(resource interface{}, request *http.Request) (int, interface{}, erro
 			err = errors.New("conflict")
 			return 409, resource, err
 		}
+		updated.SetNextRevision()
 	}
 
 	// Merge the new data to existing data
@@ -173,8 +174,9 @@ func Update(resource interface{}, request *http.Request) (int, interface{}, erro
 		return 500, nil, err
 	}
 
-	// Save to database
-	err = db.Save(resource).Error
+	// Save to database. Only update fields that is not blank or default values
+	// http://jinzhu.me/gorm/curd.html#update
+	err = db.Model(resource).Update(updatedObj).Error
 	if err != nil {
 		return 500, nil, err
 	}

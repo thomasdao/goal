@@ -4,6 +4,7 @@ package goal
 // typically used to avoid data being overridden by multiple clients
 type Revisioner interface {
 	CurrentRevision() string
+	SetNextRevision()
 }
 
 // CanMerge check if the updated object can be safely merged to current
