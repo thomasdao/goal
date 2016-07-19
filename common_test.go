@@ -19,6 +19,7 @@ type testuser struct {
 	Password string
 	Name     string
 	Age      int
+	Rev      int64
 }
 
 type article struct {
@@ -28,7 +29,7 @@ type article struct {
 	goal.Permission
 }
 
-var db gorm.DB
+var db *gorm.DB
 
 var (
 	redisAddress   = flag.String("redis-address", ":6379", "Address to the Redis server")
@@ -45,7 +46,7 @@ func setup() {
 	db.SingularTable(true)
 
 	// Setup database
-	goal.InitGormDb(&db)
+	goal.InitGormDb(db)
 
 	// Setup redis
 	pool := redis.NewPool(func() (redis.Conn, error) {

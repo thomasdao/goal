@@ -3,6 +3,7 @@ package goal_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"reflect"
@@ -28,11 +29,15 @@ func (user *testuser) Delete(w http.ResponseWriter, request *http.Request) (int,
 	return goal.Delete(user, request)
 }
 
+func (user *testuser) CurrentRevision() string {
+	return fmt.Sprintf("%d", user.Rev)
+}
+
 func TestCreate(t *testing.T) {
 	setup()
 	defer tearDown()
 
-	var json = []byte(`{"Name":"Thomas", "Age": 28}`)
+	var json = []byte(`{"Name":"Thomas", "Age": 28, "Rev": 1}`)
 	req, _ := http.NewRequest("POST", userURL(), bytes.NewBuffer(json))
 
 	// Get response
@@ -78,6 +83,7 @@ func TestGet(t *testing.T) {
 	user := &testuser{}
 	user.Name = "Thomas"
 	user.Age = 28
+	user.Rev = 1
 	db.Create(user)
 
 	req, _ := http.NewRequest("GET", idURL(user.ID), nil)
@@ -138,10 +144,12 @@ func TestPut(t *testing.T) {
 	user := &testuser{}
 	user.Name = "Thomas"
 	user.Age = 28
+	user.Rev = 1
 	db.Create(user)
 
-	var json = []byte(`{"Name":"Thomas Dao"}`)
+	var json = []byte(`{"Name":"Thomas Dao", "ID":1, "Rev":1}`)
 	req, _ := http.NewRequest("PUT", idURL(user.ID), bytes.NewBuffer(json))
+	req.Close = true
 
 	// Get response
 	client := &http.Client{}
@@ -150,14 +158,64 @@ func TestPut(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		t.Error("Request Failed")
+		body, _ := ioutil.ReadAll(res.Body)
+		t.Errorf("Request Failed %d %s", res.StatusCode, string(body))
 		return
 	}
 
 	var result testuser
 	if db.Where("name = ?", "Thomas Dao").First(&result).RecordNotFound() {
+		t.Error("Update unsuccessful")
+	}
+
+	if result.ID != user.ID || result.Age != user.Age {
+		t.Error("Incorrect update")
+	}
+
+	// Make sure data exists in Redis
+	if goal.SharedCache != nil {
+		key := goal.CacheKey(user)
+		var redisUser testuser
+		goal.SharedCache.Get(key, &redisUser)
+		if !reflect.DeepEqual(result, redisUser) {
+			t.Error("Incorrect data in redis, ", result, redisUser)
+		}
+	}
+}
+
+func TestPutConflict(t *testing.T) {
+	setup()
+	defer tearDown()
+
+	user := &testuser{}
+	user.Name = "Thomas"
+	user.Age = 28
+	user.Rev = 1
+	db.Create(user)
+
+	var json = []byte(`{"Name":"Thomas Dao", "ID":1, "Rev":0}`)
+	req, _ := http.NewRequest("PUT", idURL(user.ID), bytes.NewBuffer(json))
+	req.Close = true
+
+	// Get response
+	client := &http.Client{}
+	res, err := client.Do(req)
+
+	if err != nil {
+		t.Error(err)
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != 409 {
+		t.Errorf("This should be conflict %d", res.StatusCode)
+		return
+	}
+
+	var result testuser
+	if db.Where("name = ?", "Thomas").First(&result).RecordNotFound() {
 		t.Error("Update unsuccessful")
 	}
 

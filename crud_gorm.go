@@ -5,8 +5,11 @@ package goal
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"reflect"
 
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
@@ -40,7 +43,11 @@ func Read(resource interface{}, request *http.Request) (int, interface{}, error)
 	vars := mux.Vars(request)
 
 	// Retrieve id parameter
-	id := vars["id"]
+	id, exists := vars["id"]
+	if !exists {
+		err := errors.New("id is required")
+		return 400, nil, err
+	}
 
 	// Attempt to retrieve from redis first, if not exist, retrieve from
 	// database and cache it
@@ -116,11 +123,31 @@ func Update(resource interface{}, request *http.Request) (int, interface{}, erro
 	vars := mux.Vars(request)
 
 	// Retrieve id parameter, if error return 400 HTTP error code
-	id := vars["id"]
+	id, exists := vars["id"]
+	if !exists {
+		err := errors.New("id is required")
+		return 400, nil, err
+	}
+
+	// Parse request body into resource
+	resourceType := reflect.TypeOf(resource).Elem()
+	updatedObj := reflect.New(resourceType).Interface()
+	body, err := ioutil.ReadAll(request.Body)
+	if err != nil {
+		fmt.Println(err)
+		return 500, nil, err
+	}
+
+	err = json.Unmarshal(body, updatedObj)
+	if err != nil {
+		fmt.Println(err)
+		return 500, nil, err
+	}
 
 	// Retrieve from database
-	err := db.First(resource, id).Error
+	err = db.First(resource, id).Error
 	if err != nil {
+		fmt.Println(err)
 		return 500, nil, err
 	}
 
@@ -130,11 +157,19 @@ func Update(resource interface{}, request *http.Request) (int, interface{}, erro
 		return 403, nil, err
 	}
 
-	// Parse request body into resource
-	decoder := json.NewDecoder(request.Body)
-	err = decoder.Decode(resource)
+	// Check if this object support revision
+	current, okCurrent := resource.(Revisioner)
+	updated, okUpdated := updatedObj.(Revisioner)
+	if okCurrent && okUpdated {
+		if !CanMerge(current, updated) {
+			err = errors.New("conflict")
+			return 409, resource, err
+		}
+	}
+
+	// Merge the new data to existing data
+	err = json.Unmarshal(body, resource)
 	if err != nil {
-		fmt.Println(err)
 		return 500, nil, err
 	}
 

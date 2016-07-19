@@ -66,7 +66,7 @@ func RegisterWithPassword(
 	qry := fmt.Sprintf("%s = ?", usernameCol)
 	err = db.Where(qry, username).First(user).Error
 	if err != nil {
-		if err != gorm.RecordNotFound {
+		if err != gorm.ErrRecordNotFound {
 			return nil, err
 		}
 	}

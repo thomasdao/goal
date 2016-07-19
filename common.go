@@ -16,6 +16,26 @@ func TableName(resource interface{}) string {
 	return name
 }
 
+// Error message should be a json object, with error message
+// and any optional data
+func getErrorString(data interface{}, err error) string {
+	errMap := map[string]interface{}{
+		"message": err.Error(),
+	}
+
+	if data != nil {
+		errMap["data"] = data
+	}
+
+	errByte, marshalErr := json.Marshal(errMap)
+	if marshalErr != nil {
+		errMap["data"] = marshalErr.Error()
+		errByte, _ = json.Marshal(errMap)
+	}
+
+	return string(errByte)
+}
+
 // Write response back to client
 func renderJSON(rw http.ResponseWriter, request *http.Request, handler simpleResponse) {
 	if handler == nil {
@@ -26,14 +46,14 @@ func renderJSON(rw http.ResponseWriter, request *http.Request, handler simpleRes
 	code, data, err := handler(rw, request)
 
 	if err != nil {
-		http.Error(rw, err.Error(), code)
+		http.Error(rw, getErrorString(data, err), code)
 		return
 	}
 
 	var content []byte
 	content, err = json.Marshal(data)
 	if err != nil {
-		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		http.Error(rw, getErrorString(nil, err), http.StatusInternalServerError)
 		return
 	}
 
