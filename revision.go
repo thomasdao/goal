@@ -12,9 +12,5 @@ type Revisioner interface {
 func CanMerge(current Revisioner, updated Revisioner) bool {
 	// If the revision of updated object is the same as current revision,
 	// updated object can be merged safely
-	if current.CurrentRevision() == updated.CurrentRevision() {
-		return true
-	}
-
-	return false
+	return current.CurrentRevision() == updated.CurrentRevision()
 }
