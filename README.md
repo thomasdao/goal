@@ -302,6 +302,22 @@ art.Permission = goal.Permission{
 
 If a record doesn't implement any `Permit*` interfaces above, Goal assumes it can be accessed by public
 
+# Revision
+
+In order to prevent a record being changed from multiple sources, Goal supports simple strategy based on revision number. The client sends current revision of data to be updated, and server will check if the revision is the latest in database. If it's the latest, server allow data to be updated, else it returns error with the record in the database and client can decide how to resolve the conflict.
+
+It's easy to add revision support by implementing `Revisioner` interface:
+
+```go
+func (user *testuser) CurrentRevision() uint64 {
+	return user.Rev
+}
+
+func (user *testuser) SetNextRevision() {
+	user.Rev = user.Rev + 1
+}
+```
+
 # License
 
 MIT License
