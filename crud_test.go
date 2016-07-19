@@ -28,7 +28,7 @@ func (user *testuser) Delete(w http.ResponseWriter, request *http.Request) (int,
 	return goal.Delete(user, request)
 }
 
-func (user *testuser) CurrentRevision() uint64 {
+func (user *testuser) CurrentRevision() int64 {
 	return user.Rev
 }
 
