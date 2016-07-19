@@ -3,7 +3,6 @@ package goal_test
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"reflect"
@@ -29,8 +28,8 @@ func (user *testuser) Delete(w http.ResponseWriter, request *http.Request) (int,
 	return goal.Delete(user, request)
 }
 
-func (user *testuser) CurrentRevision() string {
-	return fmt.Sprintf("%d", user.Rev)
+func (user *testuser) CurrentRevision() uint64 {
+	return user.Rev
 }
 
 func (user *testuser) SetNextRevision() {
@@ -197,10 +196,10 @@ func TestPutConflict(t *testing.T) {
 	user := &testuser{}
 	user.Name = "Thomas"
 	user.Age = 28
-	user.Rev = 1
+	user.Rev = 2
 	db.Create(user)
 
-	var json = []byte(`{"Name":"Thomas Dao", "ID":1, "Rev":0}`)
+	var json = []byte(`{"Name":"Thomas Dao", "ID":1, "Rev":1}`)
 	req, _ := http.NewRequest("PUT", idURL(user.ID), bytes.NewBuffer(json))
 	req.Close = true
 
@@ -235,6 +234,19 @@ func TestPutConflict(t *testing.T) {
 		if !reflect.DeepEqual(result, redisUser) {
 			t.Error("Incorrect data in redis, ", result, redisUser)
 		}
+	}
+
+	json1 := []byte(`{"Name":"Thomas Dao", "ID":1}`)
+	req1, _ := http.NewRequest("PUT", idURL(user.ID), bytes.NewBuffer(json1))
+	res1, err1 := client.Do(req1)
+
+	if err1 != nil {
+		t.Error(err1)
+	}
+
+	if res1.StatusCode != 400 {
+		t.Errorf("Revision should be required %d", res1.StatusCode)
+		return
 	}
 }
 

@@ -3,7 +3,7 @@ package goal
 // Revisioner tell the revision of current record. It is
 // typically used to avoid data being overridden by multiple clients
 type Revisioner interface {
-	CurrentRevision() string
+	CurrentRevision() uint64
 	SetNextRevision()
 }
 

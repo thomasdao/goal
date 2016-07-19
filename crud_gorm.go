@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"reflect"
 
@@ -132,13 +131,9 @@ func Update(resource interface{}, request *http.Request) (int, interface{}, erro
 	// Parse request body into resource
 	resourceType := reflect.TypeOf(resource).Elem()
 	updatedObj := reflect.New(resourceType).Interface()
-	body, err := ioutil.ReadAll(request.Body)
-	if err != nil {
-		fmt.Println(err)
-		return 500, nil, err
-	}
+	decoder := json.NewDecoder(request.Body)
 
-	err = json.Unmarshal(body, updatedObj)
+	err := decoder.Decode(updatedObj)
 	if err != nil {
 		fmt.Println(err)
 		return 500, nil, err
@@ -161,17 +156,17 @@ func Update(resource interface{}, request *http.Request) (int, interface{}, erro
 	current, okCurrent := resource.(Revisioner)
 	updated, okUpdated := updatedObj.(Revisioner)
 	if okCurrent && okUpdated {
+		if updated.CurrentRevision() == 0 {
+			err = errors.New("revision is required")
+			return 400, nil, err
+		}
+
 		if !CanMerge(current, updated) {
 			err = errors.New("conflict")
 			return 409, resource, err
 		}
-		updated.SetNextRevision()
-	}
 
-	// Merge the new data to existing data
-	err = json.Unmarshal(body, resource)
-	if err != nil {
-		return 500, nil, err
+		updated.SetNextRevision()
 	}
 
 	// Save to database. Only update fields that is not blank or default values
