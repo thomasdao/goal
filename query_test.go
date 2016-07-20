@@ -6,13 +6,14 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"reflect"
 	"testing"
 
 	"github.com/thomasdao/goal"
 )
 
 func (user *testuser) Query(w http.ResponseWriter, req *http.Request) (int, interface{}, error) {
-	return goal.HandleQuery(user, req)
+	return goal.HandleQuery(reflect.TypeOf(user), req)
 }
 
 func queryPath(query []byte) string {

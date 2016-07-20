@@ -33,7 +33,7 @@ func DB() *gorm.DB {
 
 // Read provides basic implementation to retrieve object
 // based on request parameters
-func Read(resource interface{}, request *http.Request) (int, interface{}, error) {
+func Read(rType reflect.Type, request *http.Request) (int, interface{}, error) {
 	if db == nil {
 		panic("Database is not initialized yet")
 	}
@@ -47,6 +47,8 @@ func Read(resource interface{}, request *http.Request) (int, interface{}, error)
 		err := errors.New("id is required")
 		return 400, nil, err
 	}
+
+	resource := newObjectWithType(rType)
 
 	// Attempt to retrieve from redis first, if not exist, retrieve from
 	// database and cache it
@@ -89,10 +91,12 @@ func Read(resource interface{}, request *http.Request) (int, interface{}, error)
 
 // Create provides basic implementation to create a record
 // into the database
-func Create(resource interface{}, request *http.Request) (int, interface{}, error) {
+func Create(rType reflect.Type, request *http.Request) (int, interface{}, error) {
 	if db == nil {
 		panic("Database is not initialized yet")
 	}
+
+	resource := newObjectWithType(rType)
 
 	// Parse request body into resource
 	decoder := json.NewDecoder(request.Body)
@@ -113,7 +117,7 @@ func Create(resource interface{}, request *http.Request) (int, interface{}, erro
 
 // Update provides basic implementation to update a record
 // inside database
-func Update(resource interface{}, request *http.Request) (int, interface{}, error) {
+func Update(rType reflect.Type, request *http.Request) (int, interface{}, error) {
 	if db == nil {
 		panic("Database is not initialized yet")
 	}
@@ -128,9 +132,10 @@ func Update(resource interface{}, request *http.Request) (int, interface{}, erro
 		return 400, nil, err
 	}
 
-	// Parse request body into resource
-	resourceType := reflect.TypeOf(resource).Elem()
-	updatedObj := reflect.New(resourceType).Interface()
+	resource := newObjectWithType(rType)
+
+	// Parse request body into updatedObj
+	updatedObj := newObjectWithType(rType)
 	decoder := json.NewDecoder(request.Body)
 
 	err := decoder.Decode(updatedObj)
@@ -181,7 +186,7 @@ func Update(resource interface{}, request *http.Request) (int, interface{}, erro
 
 // Delete provides basic implementation to delete a record inside
 // a database
-func Delete(resource interface{}, request *http.Request) (int, interface{}, error) {
+func Delete(rType reflect.Type, request *http.Request) (int, interface{}, error) {
 	if db == nil {
 		panic("Database is not initialized yet")
 	}
@@ -190,7 +195,13 @@ func Delete(resource interface{}, request *http.Request) (int, interface{}, erro
 	vars := mux.Vars(request)
 
 	// Retrieve id parameter, if error return 400 HTTP error code
-	id := vars["id"]
+	id, exists := vars["id"]
+	if !exists {
+		err := errors.New("id is required")
+		return 400, nil, err
+	}
+
+	resource := newObjectWithType(rType)
 
 	// Retrieve from database
 	err := db.First(resource, id).Error

@@ -83,3 +83,10 @@ func dynamicSlice(resource interface{}) interface{} {
 
 	return x.Interface()
 }
+
+func newObjectWithType(t reflect.Type) interface{} {
+	if reflect.TypeOf(t).Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	return reflect.New(t).Interface()
+}

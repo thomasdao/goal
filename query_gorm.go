@@ -141,7 +141,7 @@ func (params *QueryParams) Find(resource interface{}, results interface{}) error
 }
 
 // HandleQuery retrieves results filtered by request parameters
-func HandleQuery(resource interface{}, request *http.Request) (int, interface{}, error) {
+func HandleQuery(rType reflect.Type, request *http.Request) (int, interface{}, error) {
 	if db == nil {
 		panic("Database is not initialized yet")
 	}
@@ -162,6 +162,7 @@ func HandleQuery(resource interface{}, request *http.Request) (int, interface{},
 		return 500, nil, err
 	}
 
+	resource := newObjectWithType(rType)
 	results := dynamicSlice(resource)
 
 	err = params.Find(resource, results)

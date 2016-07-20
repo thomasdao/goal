@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 
 	"github.com/thomasdao/goal"
@@ -19,15 +20,15 @@ func (user *testuser) Roles() []string {
 }
 
 func (art *article) Get(w http.ResponseWriter, request *http.Request) (int, interface{}, error) {
-	return goal.Read(art, request)
+	return goal.Read(reflect.TypeOf(art), request)
 }
 
 func (art *article) Post(w http.ResponseWriter, request *http.Request) (int, interface{}, error) {
-	return goal.Create(art, request)
+	return goal.Create(reflect.TypeOf(art), request)
 }
 
 func (art *article) Query(w http.ResponseWriter, request *http.Request) (int, interface{}, error) {
-	return goal.HandleQuery(art, request)
+	return goal.HandleQuery(reflect.TypeOf(art), request)
 }
 
 func TestCanRead(t *testing.T) {
