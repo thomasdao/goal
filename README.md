@@ -49,19 +49,19 @@ Goal simplifies many ideas from [Sleepy Framework](https://github.com/dougblack/
 ```go
 // Define HTTP methods to support
 func (user *testuser) Get(w http.ResponseWriter, request *http.Request) (int, interface{}, error) {
-	return goal.Read(user, request)
+	return goal.Read(reflect.TypeOf(user), request)
 }
 
 func (user *testuser) Post(w http.ResponseWriter, request *http.Request) (int, interface{}, error) {
-	return goal.Create(user, request)
+	return goal.Create(reflect.TypeOf(user), request)
 }
 
 func (user *testuser) Put(w http.ResponseWriter, request *http.Request) (int, interface{}, error) {
-	return goal.Update(user, request)
+	return goal.Update(reflect.TypeOf(user), request)
 }
 
 func (user *testuser) Delete(w http.ResponseWriter, request *http.Request) (int, interface{}, error) {
-	return goal.Delete(user, request)
+	return goal.Delete(reflect.TypeOf(user), request)
 }
 ```
 
