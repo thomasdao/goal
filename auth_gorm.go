@@ -48,8 +48,8 @@ func RegisterWithPassword(
 		return nil, err
 	}
 
-	username := values["username"]
-	password := values["password"]
+	username := values[usernameCol]
+	password := values[passwordCol]
 
 	if username == "" || password == "" {
 		return nil, errors.New("username or password is not found")
@@ -63,12 +63,18 @@ func RegisterWithPassword(
 	}
 
 	// Search db, if a username is already defined, return error
-	qry := fmt.Sprintf("%s = ?", usernameCol)
-	err = db.Where(qry, username).First(user).Error
+	qryStr := fmt.Sprintf("%s = ?", usernameCol)
+	var count int
+	qry := db.Where(qryStr, username).First(user).Count(&count)
+	err = qry.Error
 	if err != nil {
 		if err != gorm.ErrRecordNotFound {
 			return nil, err
 		}
+	}
+
+	if count > 0 {
+		return nil, errors.New("account already exists")
 	}
 
 	// Since user was populated with extra data, we need to
@@ -122,8 +128,8 @@ func LoginWithPassword(
 		return nil, err
 	}
 
-	username := values["username"]
-	password := values["password"]
+	username := values[usernameCol]
+	password := values[passwordCol]
 
 	if username == "" || password == "" {
 		return nil, errors.New("username or password is not found")
